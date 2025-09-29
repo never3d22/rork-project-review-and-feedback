@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart, Filter } from 'lucide-react-native';
+import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES } from '@/constants/dishes';
@@ -124,15 +124,40 @@ export default function MenuScreen() {
       </LinearGradient>
 
       <View style={styles.categoriesContainer}>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setShowCategoryModal(true)}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoriesScrollContent}
         >
-          <Filter color="#9a4759" size={20} />
-          <Text style={styles.filterButtonText}>
-            {selectedCategory === 'Все' ? 'Фильтр' : selectedCategory}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.categoryButton,
+              selectedCategory === 'Все' && styles.categoryButtonActive
+            ]}
+            onPress={() => setSelectedCategory('Все')}
+          >
+            <Text style={[
+              styles.categoryButtonText,
+              selectedCategory === 'Все' && styles.categoryButtonTextActive
+            ]}>Все</Text>
+          </TouchableOpacity>
+          
+          {CATEGORIES.map(category => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category && styles.categoryButtonActive
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text style={[
+                styles.categoryButtonText,
+                selectedCategory === category && styles.categoryButtonTextActive
+              ]}>{category}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       <ScrollView 
@@ -390,25 +415,32 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     backgroundColor: '#fff',
     paddingVertical: 16,
-    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#9a4759',
-    backgroundColor: '#fff',
-    gap: 8,
-    alignSelf: 'flex-start',
+  categoriesScrollContent: {
+    paddingHorizontal: 20,
+    gap: 12,
   },
-  filterButtonText: {
-    fontSize: 16,
-    color: '#9a4759',
+  categoryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  categoryButtonActive: {
+    backgroundColor: '#9a4759',
+    borderColor: '#9a4759',
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500' as const,
+  },
+  categoryButtonTextActive: {
+    color: '#fff',
     fontWeight: '600' as const,
   },
   categoryModalContainer: {

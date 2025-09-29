@@ -117,7 +117,7 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
           style={styles.removeButton}
           onPress={() => onRemove(item.dish.id)}
         >
-          <Trash2 color="#ff4444" size={20} />
+          <Trash2 color="#ff4444" size={16} />
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -183,9 +183,11 @@ export default function CartScreen() {
         items: cart,
         total: getCartTotal(),
         utensils: utensilsCount > 0,
+        utensilsCount,
         paymentMethod,
         deliveryType,
         deliveryAddress: deliveryType === 'delivery' ? deliveryAddress : undefined,
+        deliveryTime,
         comments,
       });
       
@@ -274,7 +276,7 @@ export default function CartScreen() {
             <Text style={styles.pickupText}>Телефон: {restaurant.phone}</Text>
             
             <View style={styles.timeSection}>
-              <Text style={styles.timeEstimate}>В течение 25-35 минут</Text>
+              <Text style={styles.timeEstimate}>В течение {restaurant.pickupMinTime}-{restaurant.pickupMaxTime} минут</Text>
               <TouchableOpacity
                 style={styles.changeTimeButton}
                 onPress={() => setShowTimeModal(true)}
@@ -297,7 +299,7 @@ export default function CartScreen() {
             />
             
             <View style={styles.timeSection}>
-              <Text style={styles.timeEstimate}>В течение 25-35 минут</Text>
+              <Text style={styles.timeEstimate}>В течение {restaurant.deliveryMinTime}-{restaurant.deliveryMaxTime} минут</Text>
               <TouchableOpacity
                 style={styles.changeTimeButton}
                 onPress={() => setShowTimeModal(true)}
@@ -761,7 +763,11 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   removeButton: {
-    padding: 8,
+    padding: 4,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   recommendationsSection: {
     backgroundColor: '#fff',

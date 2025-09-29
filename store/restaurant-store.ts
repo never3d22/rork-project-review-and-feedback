@@ -53,6 +53,11 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     phone: '+7 (999) 123-45-67',
     workingHours: '10:00 - 22:00',
     deliveryTime: '30-45 мин',
+    pickupTime: '25-35 мин',
+    deliveryMinTime: 30,
+    deliveryMaxTime: 45,
+    pickupMinTime: 25,
+    pickupMaxTime: 35,
   });
 
   // Load data from storage on mount
@@ -150,9 +155,8 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     };
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
-    clearCart();
     return newOrder.id;
-  }, [clearCart]);
+  }, []);
 
   const updateOrderStatus = useCallback((orderId: string, status: Order['status']) => {
     setOrders(prevOrders =>

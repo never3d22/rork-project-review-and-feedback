@@ -20,9 +20,11 @@ export interface Order {
   items: CartItem[];
   total: number;
   utensils: boolean;
+  utensilsCount: number;
   paymentMethod: 'card' | 'cash' | 'online';
   deliveryType: 'pickup' | 'delivery';
   deliveryAddress?: string;
+  deliveryTime?: string;
   comments: string;
   status: 'pending' | 'preparing' | 'ready' | 'delivered';
   createdAt: Date;
@@ -43,6 +45,11 @@ export interface Restaurant {
   phone: string;
   workingHours: string;
   deliveryTime: string;
+  pickupTime: string;
+  deliveryMinTime: number;
+  deliveryMaxTime: number;
+  pickupMinTime: number;
+  pickupMaxTime: number;
 }
 
 export interface Category {
