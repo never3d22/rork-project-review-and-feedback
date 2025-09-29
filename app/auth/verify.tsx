@@ -55,9 +55,9 @@ export default function VerifyCodeScreen() {
       
       // Фокусируемся на следующем пустом поле или последнем заполненном
       const nextIndex = Math.min(index + digits.length, 5);
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         inputRefs.current[nextIndex]?.focus();
-      }, 10);
+      });
       return;
     }
 
@@ -68,15 +68,21 @@ export default function VerifyCodeScreen() {
 
     // Автоматически переходим к следующему полю при вводе цифры
     if (cleanText && index < 5) {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         inputRefs.current[index + 1]?.focus();
-      }, 10);
+      });
     }
   };
 
   const handleKeyPress = (key: string, index: number) => {
     if (key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+      // Очищаем предыдущее поле и фокусируемся на нем
+      const newCode = [...code];
+      newCode[index - 1] = '';
+      setCode(newCode);
+      requestAnimationFrame(() => {
+        inputRefs.current[index - 1]?.focus();
+      });
     }
   };
 
@@ -104,7 +110,9 @@ export default function VerifyCodeScreen() {
         Alert.alert('Ошибка', 'Неверный код. Попробуйте еще раз.');
         // Очищаем поля и фокусируемся на первом
         setCode(['', '', '', '', '', '']);
-        inputRefs.current[0]?.focus();
+        requestAnimationFrame(() => {
+          inputRefs.current[0]?.focus();
+        });
       }
     } catch {
       Alert.alert('Ошибка', 'Произошла ошибка при проверке кода');
@@ -169,10 +177,12 @@ export default function VerifyCodeScreen() {
                   onChangeText={(text) => handleCodeChange(text, index)}
                   onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
                   keyboardType="number-pad"
-                  maxLength={1}
+                  maxLength={6}
                   textAlign="center"
                   selectTextOnFocus
                   autoFocus={index === 0}
+                  blurOnSubmit={false}
+                  returnKeyType="next"
                   testID={`code-input-${index}`}
                 />
               ))}
