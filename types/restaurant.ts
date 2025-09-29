@@ -6,6 +6,8 @@ export interface Dish {
   image: string;
   category: string;
   available: boolean;
+  weight?: string;
+  ingredients?: string[];
 }
 
 export interface CartItem {

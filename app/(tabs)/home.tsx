@@ -6,10 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Clock, MapPin, Eye, EyeOff } from 'lucide-react-native';
+import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
@@ -17,10 +19,32 @@ import { Dish } from '@/types/restaurant';
 export default function MenuScreen() {
   const { dishes, addToCart, restaurant, user, toggleDishVisibility } = useRestaurant();
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [showDishModal, setShowDishModal] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
 
+  const handleDishPress = (dish: Dish) => {
+    setSelectedDish(dish);
+    setShowDishModal(true);
+  };
+
+  const handleAddToCart = (dish: Dish) => {
+    addToCart(dish);
+    setShowDishModal(false);
+  };
+
+  const handleGoToCart = () => {
+    setShowDishModal(false);
+    router.push('/(tabs)/cart');
+  };
+
   const renderDishCard = (item: Dish) => (
-    <View key={item.id} style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}>
+    <TouchableOpacity 
+      key={item.id} 
+      style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}
+      onPress={() => handleDishPress(item)}
+      activeOpacity={0.8}
+    >
       <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
       <View style={styles.dishInfo}>
         <Text style={[styles.dishName, !item.available && styles.dishNameUnavailable]}>{item.name}</Text>
@@ -33,7 +57,10 @@ export default function MenuScreen() {
             {user?.isAdmin && (
               <TouchableOpacity
                 style={styles.visibilityButton}
-                onPress={() => toggleDishVisibility(item.id)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  toggleDishVisibility(item.id);
+                }}
               >
                 {item.available ? (
                   <Eye color="#9a4759" size={20} />
@@ -45,7 +72,10 @@ export default function MenuScreen() {
             {item.available && (
               <TouchableOpacity
                 style={styles.addButton}
-                onPress={() => addToCart(item)}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  addToCart(item);
+                }}
               >
                 <Plus color="#fff" size={20} />
               </TouchableOpacity>
@@ -53,7 +83,7 @@ export default function MenuScreen() {
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -127,6 +157,70 @@ export default function MenuScreen() {
           );
         })}
       </ScrollView>
+
+      <Modal
+        visible={showDishModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDishModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowDishModal(false)}
+            >
+              <X color="#333" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          {selectedDish && (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <Image source={{ uri: selectedDish.image }} style={styles.modalImage} />
+              
+              <View style={styles.modalInfo}>
+                <Text style={styles.modalDishName}>{selectedDish.name}</Text>
+                
+                {selectedDish.weight && (
+                  <Text style={styles.modalWeight}>{selectedDish.weight}</Text>
+                )}
+                
+                <Text style={styles.modalDescription}>{selectedDish.description}</Text>
+                
+                {selectedDish.ingredients && selectedDish.ingredients.length > 0 && (
+                  <View style={styles.ingredientsContainer}>
+                    <Text style={styles.ingredientsTitle}>Состав:</Text>
+                    <Text style={styles.ingredientsText}>
+                      {selectedDish.ingredients.join(', ')}
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={styles.modalFooter}>
+                  <Text style={styles.modalPrice}>{selectedDish.price} ₽</Text>
+                  
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={styles.addToCartButton}
+                      onPress={() => handleAddToCart(selectedDish)}
+                    >
+                      <Plus color="#fff" size={20} />
+                      <Text style={styles.addToCartText}>Добавить</Text>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.goToCartButton}
+                      onPress={handleGoToCart}
+                    >
+                      <ShoppingCart color="#9a4759" size={20} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -279,5 +373,103 @@ const styles = StyleSheet.create({
   },
   visibilityButton: {
     padding: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 10,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalImage: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover' as const,
+  },
+  modalInfo: {
+    padding: 20,
+  },
+  modalDishName: {
+    fontSize: 28,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 8,
+  },
+  modalWeight: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 12,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  ingredientsContainer: {
+    marginBottom: 30,
+  },
+  ingredientsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 8,
+  },
+  ingredientsText: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 22,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  modalPrice: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: '#9a4759',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  addToCartButton: {
+    backgroundColor: '#9a4759',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
+  },
+  addToCartText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  goToCartButton: {
+    backgroundColor: '#f8f9fa',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#9a4759',
   },
 });
