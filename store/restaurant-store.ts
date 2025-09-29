@@ -268,15 +268,66 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       });
       setPendingSMSCodes(newCodes);
       
-      // В реальном приложении здесь был бы вызов SMS API
-      console.log(`SMS код для ${phone}: ${code}`);
+      // Отправляем реальное SMS
+      const success = await sendRealSMS(phone, code);
       
+      if (!success) {
+        // Если не удалось отправить SMS, удаляем код
+        const updatedCodes = new Map(pendingSMSCodes);
+        updatedCodes.delete(phone);
+        setPendingSMSCodes(updatedCodes);
+        return false;
+      }
+      
+      console.log(`SMS код отправлен на ${phone}: ${code}`);
       return true;
     } catch (error) {
       console.error('Ошибка отправки SMS:', error);
       return false;
     }
   }, [pendingSMSCodes]);
+
+  // Функция для отправки реального SMS
+  const sendRealSMS = async (phone: string, code: string): Promise<boolean> => {
+    try {
+      // Пример интеграции с SMS.ru
+      const SMS_API_ID = 'YOUR_SMS_RU_API_ID'; // Замените на ваш API ID
+      const message = `Ваш код подтверждения: ${code}`;
+      
+      const response = await fetch('https://sms.ru/sms/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          api_id: SMS_API_ID,
+          to: phone,
+          msg: message,
+          json: '1'
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'OK') {
+        console.log('SMS успешно отправлено');
+        return true;
+      } else {
+        console.error('Ошибка SMS API:', result);
+        return false;
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке SMS:', error);
+      
+      // Для разработки - показываем код в консоли
+      if (__DEV__) {
+        console.log(`[DEV MODE] SMS код для ${phone}: ${code}`);
+        return true; // В режиме разработки считаем отправку успешной
+      }
+      
+      return false;
+    }
+  };
 
   const verifySMSCode = useCallback(async (phone: string, inputCode: string): Promise<boolean> => {
     try {
