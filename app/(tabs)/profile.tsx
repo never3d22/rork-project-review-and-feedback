@@ -255,6 +255,7 @@ export default function ProfileScreen() {
       case 'preparing': return '#2196F3';
       case 'ready': return '#4CAF50';
       case 'delivered': return '#8BC34A';
+      case 'cancelled': return '#ff4444';
       default: return '#999';
     }
   };
@@ -265,6 +266,7 @@ export default function ProfileScreen() {
       case 'preparing': return 'Готовится';
       case 'ready': return 'Готов к выдаче';
       case 'delivered': return 'Доставлен';
+      case 'cancelled': return 'Отменен';
       default: return status;
     }
   };
@@ -571,12 +573,20 @@ export default function ProfileScreen() {
           
           {orders.length > 0 ? (
             orders.map(order => (
-              <View key={order.id} style={styles.orderCard}>
+              <TouchableOpacity 
+                key={order.id} 
+                style={styles.orderCard}
+                onPress={() => handleViewOrder(order)}
+                activeOpacity={0.9}
+              >
                 <View style={styles.orderHeader}>
                   <Text style={styles.orderId}>Заказ #{order.id}</Text>
                   <TouchableOpacity
                     style={styles.viewOrderButton}
-                    onPress={() => handleViewOrder(order)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleViewOrder(order);
+                    }}
                   >
                     <Eye color="#9a4759" size={16} />
                   </TouchableOpacity>
@@ -589,12 +599,15 @@ export default function ProfileScreen() {
                   <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
                 </View>
                 
-                {user.isAdmin && order.status !== 'delivered' && (
+                {user.isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
                   <View style={styles.adminControls}>
                     {order.status === 'pending' && (
                       <TouchableOpacity
                         style={styles.statusButton}
-                        onPress={() => updateOrderStatus(order.id, 'preparing')}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          updateOrderStatus(order.id, 'preparing');
+                        }}
                       >
                         <Text style={styles.statusButtonText}>Принять</Text>
                       </TouchableOpacity>
@@ -602,7 +615,10 @@ export default function ProfileScreen() {
                     {order.status === 'preparing' && (
                       <TouchableOpacity
                         style={styles.statusButton}
-                        onPress={() => updateOrderStatus(order.id, 'ready')}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          updateOrderStatus(order.id, 'ready');
+                        }}
                       >
                         <Text style={styles.statusButtonText}>Готов</Text>
                       </TouchableOpacity>
@@ -610,14 +626,23 @@ export default function ProfileScreen() {
                     {order.status === 'ready' && (
                       <TouchableOpacity
                         style={styles.statusButton}
-                        onPress={() => updateOrderStatus(order.id, 'delivered')}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          updateOrderStatus(order.id, 'delivered');
+                        }}
                       >
                         <Text style={styles.statusButtonText}>Выдан</Text>
                       </TouchableOpacity>
                     )}
                   </View>
                 )}
-              </View>
+                
+                {order.status === 'cancelled' && order.cancelReason && (
+                  <View style={styles.cancelledInfo}>
+                    <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             ))
           ) : (
             <Text style={styles.emptyText}>Нет заказов</Text>
@@ -722,6 +747,20 @@ export default function ProfileScreen() {
                     <Text style={styles.orderSummaryText}>
                       Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
                     </Text>
+                    
+                    {selectedOrder.status === 'cancelled' && (
+                      <View style={styles.cancelledOrderInfo}>
+                        <Text style={styles.cancelledOrderTitle}>Заказ отменен</Text>
+                        {selectedOrder.cancelReason && (
+                          <Text style={styles.cancelledOrderReason}>Причина: {selectedOrder.cancelReason}</Text>
+                        )}
+                        {selectedOrder.cancelledAt && (
+                          <Text style={styles.cancelledOrderDate}>
+                            Отменен: {new Date(selectedOrder.cancelledAt).toLocaleString('ru-RU')}
+                          </Text>
+                        )}
+                      </View>
+                    )}
                   </View>
                 </ScrollView>
                 
@@ -975,6 +1014,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   orderHeader: {
     flexDirection: 'row',
@@ -1204,5 +1251,44 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 8,
     lineHeight: 18,
+  },
+  cancelledInfo: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: '#fff5f5',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#ff4444',
+  },
+  cancelledReason: {
+    fontSize: 12,
+    color: '#ff4444',
+    fontStyle: 'italic' as const,
+  },
+  cancelledOrderInfo: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: '#fff5f5',
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ff4444',
+  },
+  cancelledOrderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#ff4444',
+    marginBottom: 8,
+  },
+  cancelledOrderReason: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  cancelledOrderDate: {
+    fontSize: 14,
+    color: '#666',
   },
 });

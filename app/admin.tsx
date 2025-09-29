@@ -20,13 +20,14 @@ import {
   X,
   Eye,
   EyeOff,
+  XCircle,
 } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES, MOCK_CATEGORIES } from '@/constants/dishes';
 import { Dish, Order, Category } from '@/types/restaurant';
 
 export default function AdminScreen() {
-  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus, toggleDishVisibility, restaurant, updateRestaurant, categories, addCategory, updateCategory, deleteCategory } = useRestaurant();
+  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus, cancelOrder, toggleDishVisibility, restaurant, updateRestaurant, categories, addCategory, updateCategory, deleteCategory } = useRestaurant();
   const [activeTab, setActiveTab] = useState<'dishes' | 'orders' | 'categories' | 'settings'>('dishes');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
@@ -35,6 +36,9 @@ export default function AdminScreen() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   
   // Form states
   const [dishForm, setDishForm] = useState({
@@ -143,6 +147,7 @@ export default function AdminScreen() {
       case 'preparing': return '#2196F3';
       case 'ready': return '#4CAF50';
       case 'delivered': return '#8BC34A';
+      case 'cancelled': return '#ff4444';
       default: return '#999';
     }
   };
@@ -153,7 +158,22 @@ export default function AdminScreen() {
       case 'preparing': return 'Готовится';
       case 'ready': return 'Готов к выдаче';
       case 'delivered': return 'Доставлен';
+      case 'cancelled': return 'Отменен';
       default: return status;
+    }
+  };
+
+  const handleCancelOrder = (order: Order) => {
+    setCancellingOrder(order);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelOrder = () => {
+    if (cancellingOrder) {
+      cancelOrder(cancellingOrder.id, cancelReason || 'Отменено администратором');
+      setShowCancelModal(false);
+      setCancellingOrder(null);
+      setCancelReason('');
     }
   };
 
@@ -257,7 +277,7 @@ export default function AdminScreen() {
                       <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
                     </View>
                     
-                    {order.status !== 'delivered' && (
+                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
                       <View style={styles.orderActions}>
                         {order.status === 'pending' && (
                           <TouchableOpacity
@@ -292,6 +312,17 @@ export default function AdminScreen() {
                             <Text style={styles.statusButtonText}>Выдан</Text>
                           </TouchableOpacity>
                         )}
+                        
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleCancelOrder(order);
+                          }}
+                        >
+                          <XCircle color="#fff" size={16} />
+                          <Text style={styles.cancelButtonText}>Отменить</Text>
+                        </TouchableOpacity>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -660,7 +691,7 @@ export default function AdminScreen() {
                     </Text>
                   </View>
                   
-                  {selectedOrder.status !== 'delivered' && (
+                  {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
                     <View style={styles.orderDetailActions}>
                       {selectedOrder.status === 'pending' && (
                         <TouchableOpacity
@@ -694,6 +725,31 @@ export default function AdminScreen() {
                         >
                           <Text style={styles.detailStatusButtonText}>Заказ выдан</Text>
                         </TouchableOpacity>
+                      )}
+                      
+                      <TouchableOpacity
+                        style={styles.detailCancelButton}
+                        onPress={() => {
+                          setShowOrderModal(false);
+                          handleCancelOrder(selectedOrder);
+                        }}
+                      >
+                        <XCircle color="#fff" size={20} />
+                        <Text style={styles.detailCancelButtonText}>Отменить заказ</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {selectedOrder.status === 'cancelled' && (
+                    <View style={styles.cancelledInfo}>
+                      <Text style={styles.cancelledTitle}>Заказ отменен</Text>
+                      {selectedOrder.cancelReason && (
+                        <Text style={styles.cancelledReason}>Причина: {selectedOrder.cancelReason}</Text>
+                      )}
+                      {selectedOrder.cancelledAt && (
+                        <Text style={styles.cancelledDate}>
+                          Отменен: {new Date(selectedOrder.cancelledAt).toLocaleString('ru-RU')}
+                        </Text>
                       )}
                     </View>
                   )}
@@ -850,6 +906,75 @@ export default function AdminScreen() {
               <Save color="#fff" size={20} />
               <Text style={styles.saveButtonText}>Сохранить</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Cancel Order Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCancelModal(false);
+          setCancellingOrder(null);
+          setCancelReason('');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Отмена заказа</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancellingOrder(null);
+                  setCancelReason('');
+                }}
+              >
+                <X color="#666" size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            {cancellingOrder && (
+              <View style={styles.modalForm}>
+                <Text style={styles.cancelOrderText}>
+                  Вы уверены, что хотите отменить заказ #{cancellingOrder.id}?
+                </Text>
+                
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Причина отмены (необязательно)</Text>
+                  <TextInput
+                    style={[styles.input, { minHeight: 80 }]}
+                    placeholder="Укажите причину отмены заказа"
+                    value={cancelReason}
+                    onChangeText={setCancelReason}
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </View>
+              </View>
+            )}
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancellingOrder(null);
+                  setCancelReason('');
+                }}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmCancelButton}
+                onPress={confirmCancelOrder}
+              >
+                <Text style={styles.confirmCancelButtonText}>Отменить заказ</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1063,6 +1188,20 @@ const styles = StyleSheet.create({
   },
   statusButtonText: {
     fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  cancelButton: {
+    backgroundColor: '#ff4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  cancelButtonText: {
+    fontSize: 12,
     fontWeight: '600' as const,
     color: '#fff',
   },
@@ -1350,5 +1489,92 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#fff',
+  },
+  detailCancelButton: {
+    backgroundColor: '#ff4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 12,
+    gap: 8,
+    shadowColor: '#ff4444',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  detailCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  cancelledInfo: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: '#fff5f5',
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ff4444',
+  },
+  cancelledTitle: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#ff4444',
+    marginBottom: 8,
+  },
+  cancelledReason: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  cancelledDate: {
+    fontSize: 14,
+    color: '#666',
+  },
+  cancelOrderText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center' as const,
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  confirmCancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#ff4444',
+    alignItems: 'center',
+  },
+  confirmCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  modalButtonCancelText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#666',
   },
 });

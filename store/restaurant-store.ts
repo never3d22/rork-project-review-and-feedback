@@ -167,6 +167,19 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     );
   }, []);
 
+  const cancelOrder = useCallback((orderId: string, reason?: string) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { 
+          ...order, 
+          status: 'cancelled' as Order['status'],
+          cancelReason: reason,
+          cancelledAt: new Date()
+        } : order
+      )
+    );
+  }, []);
+
   const loginAsAdmin = useCallback((username: string, password: string) => {
     if (username === 'admin' && password === '1234') {
       setUser({
@@ -447,6 +460,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     getCartTotal,
     createOrder,
     updateOrderStatus,
+    cancelOrder,
     loginAsAdmin,
     loginAsUser,
     logout,

@@ -12,14 +12,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
+import { Plus, Minus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function MenuScreen() {
-  const { dishes, addToCart, restaurant, user, toggleDishVisibility, orders } = useRestaurant();
+  const { dishes, addToCart, updateQuantity, cart, restaurant, user, toggleDishVisibility, orders } = useRestaurant();
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState<boolean>(false);
@@ -88,55 +88,86 @@ export default function MenuScreen() {
     },
   });
 
-  const renderDishCard = (item: Dish) => (
-    <TouchableOpacity 
-      key={item.id} 
-      style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}
-      onPress={() => item.available ? handleDishPress(item) : null}
-      activeOpacity={item.available ? 0.9 : 1}
-      disabled={!item.available}
-    >
-      <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
-      <View style={styles.dishInfo}>
-        <Text style={[styles.dishName, !item.available && styles.dishNameUnavailable]}>{item.name}</Text>
-        <Text style={[styles.dishDescription, !item.available && styles.dishDescriptionUnavailable]} numberOfLines={2}>
-          {item.description}
-        </Text>
-        <View style={styles.dishFooter}>
-          <Text style={[styles.dishPrice, !item.available && styles.dishPriceUnavailable]}>{item.price} ₽</Text>
-          <View style={styles.dishActions}>
-            {user?.isAdmin && (
-              <TouchableOpacity
-                style={styles.visibilityButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  toggleDishVisibility(item.id);
-                }}
-              >
-                {item.available ? (
-                  <Eye color="#9a4759" size={20} />
+  const renderDishCard = (item: Dish) => {
+    const cartItem = cart.find(cartItem => cartItem.dish.id === item.id);
+    const quantity = cartItem ? cartItem.quantity : 0;
+    
+    return (
+      <TouchableOpacity 
+        key={item.id} 
+        style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}
+        onPress={() => item.available ? handleDishPress(item) : null}
+        activeOpacity={item.available ? 0.9 : 1}
+        disabled={!item.available}
+      >
+        <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
+        <View style={styles.dishInfo}>
+          <Text style={[styles.dishName, !item.available && styles.dishNameUnavailable]}>{item.name}</Text>
+          <Text style={[styles.dishDescription, !item.available && styles.dishDescriptionUnavailable]} numberOfLines={2}>
+            {item.description}
+          </Text>
+          <View style={styles.dishFooter}>
+            <Text style={[styles.dishPrice, !item.available && styles.dishPriceUnavailable]}>{item.price} ₽</Text>
+            <View style={styles.dishActions}>
+              {user?.isAdmin && (
+                <TouchableOpacity
+                  style={styles.visibilityButton}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    toggleDishVisibility(item.id);
+                  }}
+                >
+                  {item.available ? (
+                    <Eye color="#9a4759" size={20} />
+                  ) : (
+                    <EyeOff color="#999" size={20} />
+                  )}
+                </TouchableOpacity>
+              )}
+              {item.available && (
+                quantity > 0 ? (
+                  <View style={styles.quantityControls}>
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.id, quantity - 1);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Minus color="#9a4759" size={16} />
+                    </TouchableOpacity>
+                    <Text style={styles.quantityText}>{quantity}</Text>
+                    <TouchableOpacity
+                      style={styles.quantityButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        updateQuantity(item.id, quantity + 1);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <Plus color="#9a4759" size={16} />
+                    </TouchableOpacity>
+                  </View>
                 ) : (
-                  <EyeOff color="#999" size={20} />
-                )}
-              </TouchableOpacity>
-            )}
-            {item.available && (
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  addToCart(item);
-                }}
-                activeOpacity={0.8}
-              >
-                <Plus color="#fff" size={20} />
-              </TouchableOpacity>
-            )}
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      addToCart(item);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Plus color="#fff" size={20} />
+                  </TouchableOpacity>
+                )
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -653,6 +684,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#9a4759',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  quantityButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#9a4759',
+    marginHorizontal: 8,
+    minWidth: 20,
+    textAlign: 'center' as const,
   },
   visibilityButton: {
     padding: 8,

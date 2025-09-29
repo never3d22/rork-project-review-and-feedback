@@ -26,8 +26,10 @@ export interface Order {
   deliveryAddress?: string;
   deliveryTime?: string;
   comments: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered';
+  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
   createdAt: Date;
+  cancelReason?: string;
+  cancelledAt?: Date;
 }
 
 export interface User {
