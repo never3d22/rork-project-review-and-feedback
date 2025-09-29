@@ -8,6 +8,9 @@ import {
   Image,
   Modal,
   TextInput,
+  PanResponder,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,11 +26,103 @@ import {
   CreditCard, 
   Banknote, 
   Smartphone, 
-  MessageSquare 
+  MessageSquare,
+  X 
 } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
+import { CartItem } from '@/types/restaurant';
 
 type PaymentMethod = 'card' | 'cash' | 'online';
+
+interface SwipeableCartItemProps {
+  item: CartItem;
+  onUpdateQuantity: (dishId: string, quantity: number) => void;
+  onRemove: (dishId: string) => void;
+}
+
+function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartItemProps) {
+  const translateX = new Animated.Value(0);
+  const { width } = Dimensions.get('window');
+  const swipeThreshold = width * 0.3;
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 50;
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dx < 0) {
+        translateX.setValue(Math.max(gestureState.dx, -swipeThreshold));
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx < -swipeThreshold * 0.5) {
+        Animated.timing(translateX, {
+          toValue: -swipeThreshold,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      } else {
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
+  const handleDelete = () => {
+    Animated.timing(translateX, {
+      toValue: -width,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onRemove(item.dish.id);
+    });
+  };
+
+  return (
+    <View style={styles.swipeableContainer}>
+      <View style={styles.deleteAction}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Trash2 color="#fff" size={24} />
+          <Text style={styles.deleteText}>Удалить</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <Animated.View
+        style={[styles.cartItem, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
+        <Image source={{ uri: item.dish.image }} style={styles.itemImage} />
+        <View style={styles.itemInfo}>
+          <Text style={styles.itemName}>{item.dish.name}</Text>
+          <Text style={styles.itemPrice}>{item.dish.price} ₽</Text>
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => onUpdateQuantity(item.dish.id, item.quantity - 1)}
+            >
+              <Minus color="#9a4759" size={16} />
+            </TouchableOpacity>
+            <Text style={styles.quantity}>{item.quantity}</Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => onUpdateQuantity(item.dish.id, item.quantity + 1)}
+            >
+              <Plus color="#9a4759" size={16} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => onRemove(item.dish.id)}
+        >
+          <Trash2 color="#ff4444" size={20} />
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
 
 export default function CartScreen() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder } = useRestaurant();
@@ -38,6 +133,7 @@ export default function CartScreen() {
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [deliveryTime, setDeliveryTime] = useState<string>('Сразу');
+  const [showTimeModal, setShowTimeModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [comments, setComments] = useState('');
   const insets = useSafeAreaInsets();
@@ -169,38 +265,23 @@ export default function CartScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Время доставки/самовывоза */}
-        <View style={styles.timeSection}>
-          <View style={styles.timeHeader}>
-            <Clock color="#333" size={20} />
-            <Text style={styles.sectionTitle}>Время {deliveryType === 'pickup' ? 'самовывоза' : 'доставки'}</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeOptions}>
-            {getDeliveryTimes().map((time, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.timeOption,
-                  deliveryTime === time && styles.timeOptionActive
-                ]}
-                onPress={() => setDeliveryTime(time)}
-              >
-                <Text style={[
-                  styles.timeOptionText,
-                  deliveryTime === time && styles.timeOptionTextActive
-                ]}>
-                  {time}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
+
 
         {deliveryType === 'pickup' && (
           <View style={styles.pickupInfo}>
             <Text style={styles.pickupText}>Адрес: {restaurant.address}</Text>
             <Text style={styles.pickupText}>Время работы: {restaurant.workingHours}</Text>
             <Text style={styles.pickupText}>Телефон: {restaurant.phone}</Text>
+            
+            <View style={styles.timeSection}>
+              <Text style={styles.timeEstimate}>В течение 25-35 минут</Text>
+              <TouchableOpacity
+                style={styles.changeTimeButton}
+                onPress={() => setShowTimeModal(true)}
+              >
+                <Text style={styles.changeTimeText}>Изменить время самовывоза</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         
@@ -214,6 +295,16 @@ export default function CartScreen() {
               onChangeText={setDeliveryAddress}
               multiline
             />
+            
+            <View style={styles.timeSection}>
+              <Text style={styles.timeEstimate}>В течение 25-35 минут</Text>
+              <TouchableOpacity
+                style={styles.changeTimeButton}
+                onPress={() => setShowTimeModal(true)}
+              >
+                <Text style={styles.changeTimeText}>Изменить время доставки</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -221,34 +312,12 @@ export default function CartScreen() {
         <View style={styles.dishesSection}>
           <Text style={styles.sectionTitle}>Ваш заказ</Text>
           {cart.map(item => (
-            <View key={item.dish.id} style={styles.cartItem}>
-              <Image source={{ uri: item.dish.image }} style={styles.itemImage} />
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemName}>{item.dish.name}</Text>
-                <Text style={styles.itemPrice}>{item.dish.price} ₽</Text>
-                <View style={styles.quantityControls}>
-                  <TouchableOpacity
-                    style={styles.quantityButton}
-                    onPress={() => updateQuantity(item.dish.id, item.quantity - 1)}
-                  >
-                    <Minus color="#9a4759" size={16} />
-                  </TouchableOpacity>
-                  <Text style={styles.quantity}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    style={styles.quantityButton}
-                    onPress={() => updateQuantity(item.dish.id, item.quantity + 1)}
-                  >
-                    <Plus color="#9a4759" size={16} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeFromCart(item.dish.id)}
-              >
-                <Trash2 color="#ff4444" size={20} />
-              </TouchableOpacity>
-            </View>
+            <SwipeableCartItem
+              key={item.dish.id}
+              item={item}
+              onUpdateQuantity={updateQuantity}
+              onRemove={removeFromCart}
+            />
           ))}
         </View>
 
@@ -390,6 +459,48 @@ export default function CartScreen() {
       </Modal>
 
       <Modal
+        visible={showTimeModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTimeModal(false)}
+      >
+        <View style={styles.timeModalContainer}>
+          <View style={styles.timeModalHeader}>
+            <Text style={styles.timeModalTitle}>Выберите время</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowTimeModal(false)}
+            >
+              <X color="#333" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.timeModalContent} showsVerticalScrollIndicator={false}>
+            {getDeliveryTimes().map((time, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.timeModalItem,
+                  deliveryTime === time && styles.timeModalItemActive
+                ]}
+                onPress={() => {
+                  setDeliveryTime(time);
+                  setShowTimeModal(false);
+                }}
+              >
+                <Text style={[
+                  styles.timeModalItemText,
+                  deliveryTime === time && styles.timeModalItemTextActive
+                ]}>
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      <Modal
         visible={showSuccessModal}
         transparent
         animationType="fade"
@@ -477,46 +588,67 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   timeSection: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  timeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+  timeEstimate: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '600' as const,
+    marginBottom: 8,
   },
-  timeOptions: {
-    flexDirection: 'row',
-  },
-  timeOption: {
-    paddingHorizontal: 16,
+  changeTimeButton: {
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#9a4759',
-    marginRight: 8,
   },
-  timeOptionActive: {
-    backgroundColor: '#9a4759',
-  },
-  timeOptionText: {
+  changeTimeText: {
     fontSize: 14,
+    color: '#9a4759',
+    textDecorationLine: 'underline' as const,
+  },
+  timeModalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  timeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  timeModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  timeModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  timeModalItem: {
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  timeModalItemActive: {
+    backgroundColor: '#f8f9fa',
+  },
+  timeModalItemText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  timeModalItemTextActive: {
     color: '#9a4759',
     fontWeight: '600' as const,
   },
-  timeOptionTextActive: {
-    color: '#fff',
+  closeButton: {
+    padding: 8,
   },
   pickupInfo: {
     backgroundColor: '#fff',
@@ -881,5 +1013,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#fff',
+  },
+  swipeableContainer: {
+    position: 'relative',
+    marginBottom: 1,
+  },
+  deleteAction: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 100,
+    backgroundColor: '#ff4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  deleteButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    width: '100%',
+  },
+  deleteText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600' as const,
+    marginTop: 4,
   },
 });

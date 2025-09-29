@@ -726,40 +726,55 @@ export default function AdminScreen() {
             </View>
             
             <ScrollView style={styles.modalForm}>
-              <TextInput
-                style={styles.input}
-                placeholder="Название ресторана"
-                value={restaurantForm.name}
-                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, name: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Название ресторана *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Введите название ресторана"
+                  value={restaurantForm.name}
+                  onChangeText={(text) => setRestaurantForm({ ...restaurantForm, name: text })}
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Адрес"
-                value={restaurantForm.address}
-                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, address: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Адрес *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Введите адрес ресторана"
+                  value={restaurantForm.address}
+                  onChangeText={(text) => setRestaurantForm({ ...restaurantForm, address: text })}
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Телефон"
-                value={restaurantForm.phone}
-                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, phone: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Телефон *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Введите номер телефона"
+                  value={restaurantForm.phone}
+                  onChangeText={(text) => setRestaurantForm({ ...restaurantForm, phone: text })}
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Часы работы"
-                value={restaurantForm.workingHours}
-                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, workingHours: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Часы работы *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Например: 10:00 - 22:00"
+                  value={restaurantForm.workingHours}
+                  onChangeText={(text) => setRestaurantForm({ ...restaurantForm, workingHours: text })}
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Время доставки"
-                value={restaurantForm.deliveryTime}
-                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, deliveryTime: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Время доставки *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Например: 30-45 мин"
+                  value={restaurantForm.deliveryTime}
+                  onChangeText={(text) => setRestaurantForm({ ...restaurantForm, deliveryTime: text })}
+                />
+              </View>
             </ScrollView>
             
             <TouchableOpacity

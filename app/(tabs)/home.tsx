@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
+import { Plus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart, Filter } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES } from '@/constants/dishes';
@@ -21,6 +22,7 @@ export default function MenuScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState<boolean>(false);
+  const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
 
   const handleDishPress = (dish: Dish) => {
@@ -38,12 +40,26 @@ export default function MenuScreen() {
     router.push('/(tabs)/cart');
   };
 
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return Math.abs(gestureState.dx) > 50 && Math.abs(gestureState.dy) < 100;
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx > 100) {
+        router.push('/(tabs)/profile');
+      } else if (gestureState.dx < -100) {
+        router.push('/(tabs)/cart');
+      }
+    },
+  });
+
   const renderDishCard = (item: Dish) => (
     <TouchableOpacity 
       key={item.id} 
       style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}
-      onPress={() => handleDishPress(item)}
-      activeOpacity={0.8}
+      onPress={() => item.available ? handleDishPress(item) : null}
+      activeOpacity={item.available ? 0.8 : 1}
+      disabled={!item.available}
     >
       <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
       <View style={styles.dishInfo}>
@@ -108,38 +124,22 @@ export default function MenuScreen() {
       </LinearGradient>
 
       <View style={styles.categoriesContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
-          <TouchableOpacity
-            style={[
-              styles.categoryFilter,
-              selectedCategory === 'Все' && styles.categoryFilterActive
-            ]}
-            onPress={() => setSelectedCategory('Все')}
-          >
-            <Text style={[
-              styles.categoryFilterText,
-              selectedCategory === 'Все' && styles.categoryFilterTextActive
-            ]}>Все</Text>
-          </TouchableOpacity>
-          {CATEGORIES.map(category => (
-            <TouchableOpacity
-              key={category}
-              style={[
-                styles.categoryFilter,
-                selectedCategory === category && styles.categoryFilterActive
-              ]}
-              onPress={() => setSelectedCategory(category)}
-            >
-              <Text style={[
-                styles.categoryFilterText,
-                selectedCategory === category && styles.categoryFilterTextActive
-              ]}>{category}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setShowCategoryModal(true)}
+        >
+          <Filter color="#9a4759" size={20} />
+          <Text style={styles.filterButtonText}>
+            {selectedCategory === 'Все' ? 'Фильтр' : selectedCategory}
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        {...panResponder.panHandlers}
+      >
         {CATEGORIES.map(category => {
           if (selectedCategory !== 'Все' && selectedCategory !== category) return null;
           
@@ -157,6 +157,62 @@ export default function MenuScreen() {
           );
         })}
       </ScrollView>
+
+      <Modal
+        visible={showCategoryModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={styles.categoryModalContainer}>
+          <View style={styles.categoryModalHeader}>
+            <Text style={styles.categoryModalTitle}>Выберите категорию</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCategoryModal(false)}
+            >
+              <X color="#333" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.categoryModalContent} showsVerticalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[
+                styles.categoryModalItem,
+                selectedCategory === 'Все' && styles.categoryModalItemActive
+              ]}
+              onPress={() => {
+                setSelectedCategory('Все');
+                setShowCategoryModal(false);
+              }}
+            >
+              <Text style={[
+                styles.categoryModalItemText,
+                selectedCategory === 'Все' && styles.categoryModalItemTextActive
+              ]}>Все категории</Text>
+            </TouchableOpacity>
+            
+            {CATEGORIES.map(category => (
+              <TouchableOpacity
+                key={category}
+                style={[
+                  styles.categoryModalItem,
+                  selectedCategory === category && styles.categoryModalItemActive
+                ]}
+                onPress={() => {
+                  setSelectedCategory(category);
+                  setShowCategoryModal(false);
+                }}
+              >
+                <Text style={[
+                  styles.categoryModalItemText,
+                  selectedCategory === category && styles.categoryModalItemTextActive
+                ]}>{category}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
 
       <Modal
         visible={showDishModal}
@@ -200,20 +256,28 @@ export default function MenuScreen() {
                   <Text style={styles.modalPrice}>{selectedDish.price} ₽</Text>
                   
                   <View style={styles.modalActions}>
-                    <TouchableOpacity
-                      style={styles.addToCartButton}
-                      onPress={() => handleAddToCart(selectedDish)}
-                    >
-                      <Plus color="#fff" size={20} />
-                      <Text style={styles.addToCartText}>Добавить</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={styles.goToCartButton}
-                      onPress={handleGoToCart}
-                    >
-                      <ShoppingCart color="#9a4759" size={20} />
-                    </TouchableOpacity>
+                    {selectedDish.available ? (
+                      <>
+                        <TouchableOpacity
+                          style={styles.addToCartButton}
+                          onPress={() => handleAddToCart(selectedDish)}
+                        >
+                          <Plus color="#fff" size={20} />
+                          <Text style={styles.addToCartText}>Добавить</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                          style={styles.goToCartButton}
+                          onPress={handleGoToCart}
+                        >
+                          <ShoppingCart color="#9a4759" size={20} />
+                        </TouchableOpacity>
+                      </>
+                    ) : (
+                      <View style={styles.unavailableButton}>
+                        <Text style={styles.unavailableButtonText}>Недоступно</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
@@ -326,30 +390,66 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     backgroundColor: '#fff',
     paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  categoriesScroll: {
-    paddingHorizontal: 20,
-  },
-  categoryFilter: {
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: '#9a4759',
-    marginRight: 8,
+    backgroundColor: '#fff',
+    gap: 8,
+    alignSelf: 'flex-start',
   },
-  categoryFilterActive: {
-    backgroundColor: '#9a4759',
-  },
-  categoryFilterText: {
-    fontSize: 14,
+  filterButtonText: {
+    fontSize: 16,
     color: '#9a4759',
     fontWeight: '600' as const,
   },
-  categoryFilterTextActive: {
-    color: '#fff',
+  categoryModalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  categoryModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  categoryModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  categoryModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  categoryModalItem: {
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  categoryModalItemActive: {
+    backgroundColor: '#f8f9fa',
+  },
+  categoryModalItemText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  categoryModalItemTextActive: {
+    color: '#9a4759',
+    fontWeight: '600' as const,
   },
   dishCardUnavailable: {
     opacity: 0.6,
@@ -471,5 +571,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#9a4759',
+  },
+  unavailableButton: {
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 25,
+    alignItems: 'center',
+  },
+  unavailableButtonText: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });
