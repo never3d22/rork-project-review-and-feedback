@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -121,10 +121,12 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
 }
 
 export default function CartScreen() {
-  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, loginAsUser } = useRestaurant();
+  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, loginAsUser, sendSMSCode, verifySMSCode } = useRestaurant();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [utensilsCount, setUtensilsCount] = useState(1);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
@@ -135,7 +137,18 @@ export default function CartScreen() {
   const [comments, setComments] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userPassword, setUserPassword] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
+  const [isLoading, setIsLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(60);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (timeLeft > 0 && showVerifyModal) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft, showVerifyModal]);
 
   const getRecommendedDishes = () => {
     const cartDishIds = cart.map(item => item.dish.id);
@@ -169,19 +182,108 @@ export default function CartScreen() {
     setShowClearModal(false);
   };
 
-  const handleLogin = () => {
-    if (!userPhone.trim() || !userPassword.trim()) {
-      alert('Заполните все поля');
+  const formatPhoneNumber = (text: string): string => {
+    const cleaned = text.replace(/\D/g, '');
+    const limited = cleaned.slice(0, 11);
+    
+    if (limited.length === 0) return '';
+    if (limited.length <= 1) return `+7 (${limited}`;
+    if (limited.length <= 4) return `+7 (${limited.slice(1)}`;
+    if (limited.length <= 7) return `+7 (${limited.slice(1, 4)}) ${limited.slice(4)}`;
+    if (limited.length <= 9) return `+7 (${limited.slice(1, 4)}) ${limited.slice(4, 7)}-${limited.slice(7)}`;
+    return `+7 (${limited.slice(1, 4)}) ${limited.slice(4, 7)}-${limited.slice(7, 9)}-${limited.slice(9)}`;
+  };
+
+  const getCleanPhoneNumber = (formattedPhone: string): string => {
+    return formattedPhone.replace(/\D/g, '');
+  };
+
+
+
+  const handleSendCode = async () => {
+    const cleanPhone = getCleanPhoneNumber(authPhone);
+    
+    if (cleanPhone.length !== 11) {
+      alert('Введите корректный номер телефона');
       return;
     }
-    const success = loginAsUser(userPhone, userPassword);
-    if (success) {
-      setShowAuthModal(false);
-      setUserPhone('');
-      setUserPassword('');
-      handleCheckout();
-    } else {
-      alert('Неверные данные');
+
+    setIsLoading(true);
+    
+    try {
+      const success = await sendSMSCode(cleanPhone);
+      
+      if (success) {
+        setShowPhoneModal(false);
+        setShowVerifyModal(true);
+        setTimeLeft(60);
+      } else {
+        alert('Не удалось отправить код. Попробуйте еще раз.');
+      }
+    } catch {
+      alert('Произошла ошибка при отправке кода');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const fullCode = verificationCode.join('');
+    
+    if (fullCode.length !== 6) {
+      alert('Введите полный код из 6 цифр');
+      return;
+    }
+
+    const cleanPhone = getCleanPhoneNumber(authPhone);
+    setIsLoading(true);
+    
+    try {
+      const success = await verifySMSCode(cleanPhone, fullCode);
+      
+      if (success) {
+        setShowVerifyModal(false);
+        setAuthPhone('');
+        setVerificationCode(['', '', '', '', '', '']);
+        handleCheckout();
+      } else {
+        alert('Неправильный код. Попробуйте еще раз.');
+        setVerificationCode(['', '', '', '', '', '']);
+      }
+    } catch {
+      alert('Произошла ошибка при проверке кода');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCodeChange = (text: string, index: number) => {
+    if (text.length > 1) {
+      const digits = text.replace(/\D/g, '').slice(0, 6);
+      const newCode = [...verificationCode];
+      
+      for (let i = 0; i < digits.length && i < 6; i++) {
+        newCode[i] = digits[i];
+      }
+      
+      setVerificationCode(newCode);
+      return;
+    }
+
+    const newCode = [...verificationCode];
+    newCode[index] = text.replace(/\D/g, '');
+    setVerificationCode(newCode);
+  };
+
+  const handleResendCode = async () => {
+    const cleanPhone = getCleanPhoneNumber(authPhone);
+    
+    try {
+      await sendSMSCode(cleanPhone);
+      setTimeLeft(60);
+      alert('Код отправлен повторно');
+    } catch {
+      alert('Не удалось отправить код повторно');
     }
   };
 
@@ -190,7 +292,7 @@ export default function CartScreen() {
     
     // Проверяем, авторизован ли пользователь
     if (!user) {
-      setShowAuthModal(true);
+      setShowPhoneModal(true);
       return;
     }
     
@@ -525,45 +627,124 @@ export default function CartScreen() {
         </View>
       </Modal>
 
-      {/* Authentication Modal */}
+      {/* Phone Authentication Modal */}
       <Modal
-        visible={showAuthModal}
+        visible={showPhoneModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowAuthModal(false)}
+        onRequestClose={() => setShowPhoneModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Войдите для оформления заказа</Text>
+            <Text style={styles.modalTitle}>Вход для оформления заказа</Text>
+            <Text style={styles.modalSubtitle}>Введите номер телефона для получения SMS-кода</Text>
             
             <TextInput
               style={styles.input}
-              placeholder="Номер телефона"
-              value={userPhone}
-              onChangeText={setUserPhone}
+              placeholder="+7 (999) 123-45-67"
+              value={authPhone}
+              onChangeText={(text) => setAuthPhone(formatPhoneNumber(text))}
               keyboardType="phone-pad"
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Пароль"
-              value={userPassword}
-              onChangeText={setUserPassword}
-              secureTextEntry
+              maxLength={18}
             />
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButtonCancel}
-                onPress={() => setShowAuthModal(false)}
+                onPress={() => setShowPhoneModal(false)}
               >
                 <Text style={styles.modalButtonCancelText}>Отмена</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalButtonConfirm}
-                onPress={handleLogin}
+                style={[
+                  styles.modalButtonConfirm,
+                  (!authPhone || isLoading) && styles.modalButtonDisabled
+                ]}
+                onPress={handleSendCode}
+                disabled={!authPhone || isLoading}
               >
-                <Text style={styles.modalButtonConfirmText}>Войти</Text>
+                <Text style={[
+                  styles.modalButtonConfirmText,
+                  (!authPhone || isLoading) && styles.modalButtonTextDisabled
+                ]}>
+                  {isLoading ? 'Отправляем...' : 'Получить код'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Verification Code Modal */}
+      <Modal
+        visible={showVerifyModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowVerifyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Подтверждение номера</Text>
+            <Text style={styles.modalSubtitle}>
+              Введите код из SMS, отправленный на номер {authPhone}
+            </Text>
+            
+            <View style={styles.codeContainer}>
+              {verificationCode.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  style={[
+                    styles.codeInput,
+                    digit && styles.codeInputFilled
+                  ]}
+                  value={digit}
+                  onChangeText={(text) => handleCodeChange(text, index)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  textAlign="center"
+                  selectTextOnFocus
+                />
+              ))}
+            </View>
+            
+            <View style={styles.resendContainer}>
+              {timeLeft > 0 ? (
+                <Text style={styles.timerText}>
+                  Повторная отправка через {timeLeft} сек
+                </Text>
+              ) : (
+                <TouchableOpacity onPress={handleResendCode}>
+                  <Text style={styles.resendText}>
+                    Отправить код повторно
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => {
+                  setShowVerifyModal(false);
+                  setShowPhoneModal(true);
+                }}
+              >
+                <Text style={styles.modalButtonCancelText}>Назад</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalButtonConfirm,
+                  (verificationCode.join('').length !== 6 || isLoading) && styles.modalButtonDisabled
+                ]}
+                onPress={handleVerifyCode}
+                disabled={verificationCode.join('').length !== 6 || isLoading}
+              >
+                <Text style={[
+                  styles.modalButtonConfirmText,
+                  (verificationCode.join('').length !== 6 || isLoading) && styles.modalButtonTextDisabled
+                ]}>
+                  {isLoading ? 'Проверяем...' : 'Подтвердить'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1192,5 +1373,52 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     marginBottom: 16,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center' as const,
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  codeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  codeInput: {
+    width: 40,
+    height: 48,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    fontSize: 20,
+    fontWeight: '600' as const,
+    color: '#333',
+    backgroundColor: '#fafafa',
+  },
+  codeInputFilled: {
+    borderColor: '#9a4759',
+    backgroundColor: '#f8f9fa',
+  },
+  resendContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  timerText: {
+    fontSize: 14,
+    color: '#999',
+  },
+  resendText: {
+    fontSize: 14,
+    color: '#9a4759',
+    fontWeight: '600' as const,
+  },
+  modalButtonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  modalButtonTextDisabled: {
+    color: '#999',
   },
 });
