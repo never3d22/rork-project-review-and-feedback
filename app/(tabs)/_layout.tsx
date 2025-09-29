@@ -1,6 +1,5 @@
-// template
 import { Tabs } from "expo-router";
-import { Code } from "lucide-react-native";
+import { Home, Settings } from "lucide-react-native";
 import React from "react";
 
 import Colors from "@/constants/colors";
@@ -14,10 +13,17 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: "Tab One",
-          tabBarIcon: ({ color }) => <Code color={color} />,
+          title: "Home",
+          tabBarIcon: ({ color }) => <Home color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }) => <Settings color={color} />,
         }}
       />
     </Tabs>
