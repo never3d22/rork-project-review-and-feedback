@@ -115,7 +115,6 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
             </TouchableOpacity>
           </View>
         </View>
-
       </Animated.View>
     </View>
   );
@@ -290,8 +289,6 @@ export default function CartScreen() {
             ]}>Доставка</Text>
           </TouchableOpacity>
         </View>
-
-
 
         {deliveryType === 'pickup' && (
           <View style={styles.pickupInfo}>
