@@ -45,10 +45,6 @@ export default function MenuScreen() {
   };
 
   const handleAddToCart = (dish: Dish) => {
-    if (!user) {
-      router.push('/auth/phone' as any);
-      return;
-    }
     addToCart(dish);
     setShowDishModal(false);
   };
@@ -129,10 +125,6 @@ export default function MenuScreen() {
                 style={styles.addButton}
                 onPress={(e) => {
                   e.stopPropagation();
-                  if (!user) {
-                    router.push('/auth/phone' as any);
-                    return;
-                  }
                   addToCart(item);
                 }}
                 activeOpacity={0.8}

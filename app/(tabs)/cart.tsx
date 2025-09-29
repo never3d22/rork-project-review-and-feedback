@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -142,6 +142,7 @@ export default function CartScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const insets = useSafeAreaInsets();
+  const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
     if (timeLeft > 0 && showVerifyModal) {
@@ -267,12 +268,25 @@ export default function CartScreen() {
       }
       
       setVerificationCode(newCode);
+      
+      // Фокусируемся на следующем пустом поле или последнем
+      const nextIndex = Math.min(digits.length, 5);
+      setTimeout(() => {
+        codeInputRefs.current[nextIndex]?.focus();
+      }, 10);
       return;
     }
 
     const newCode = [...verificationCode];
     newCode[index] = text.replace(/\D/g, '');
     setVerificationCode(newCode);
+    
+    // Автоматически переходим к следующему полю
+    if (text && index < 5) {
+      setTimeout(() => {
+        codeInputRefs.current[index + 1]?.focus();
+      }, 10);
+    }
   };
 
   const handleResendCode = async () => {
@@ -693,6 +707,9 @@ export default function CartScreen() {
               {verificationCode.map((digit, index) => (
                 <TextInput
                   key={index}
+                  ref={(ref) => {
+                    codeInputRefs.current[index] = ref;
+                  }}
                   style={[
                     styles.codeInput,
                     digit && styles.codeInputFilled
@@ -700,9 +717,11 @@ export default function CartScreen() {
                   value={digit}
                   onChangeText={(text) => handleCodeChange(text, index)}
                   keyboardType="number-pad"
-                  maxLength={1}
+                  maxLength={6}
                   textAlign="center"
                   selectTextOnFocus
+                  autoFocus={index === 0}
+                  testID={`code-input-${index}`}
                 />
               ))}
             </View>

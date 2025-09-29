@@ -51,7 +51,9 @@ export default function VerifyCodeScreen() {
       
       // Фокусируемся на следующем пустом поле или последнем
       const nextIndex = Math.min(digits.length, 5);
-      inputRefs.current[nextIndex]?.focus();
+      setTimeout(() => {
+        inputRefs.current[nextIndex]?.focus();
+      }, 10);
       return;
     }
 
@@ -61,7 +63,9 @@ export default function VerifyCodeScreen() {
 
     // Автоматически переходим к следующему полю
     if (text && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 10);
     }
   };
 
@@ -160,9 +164,10 @@ export default function VerifyCodeScreen() {
                   onChangeText={(text) => handleCodeChange(text, index)}
                   onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
                   keyboardType="number-pad"
-                  maxLength={1}
+                  maxLength={6}
                   textAlign="center"
                   selectTextOnFocus
+                  autoFocus={index === 0}
                   testID={`code-input-${index}`}
                 />
               ))}
