@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   PanResponder,
+  Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,19 @@ export default function MenuScreen() {
   const [showDishModal, setShowDishModal] = useState<boolean>(false);
   const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
+  
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [120, 60],
+    extrapolate: 'clamp',
+  });
+  
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0.7],
+    extrapolate: 'clamp',
+  });
 
   const handleDishPress = (dish: Dish) => {
     setSelectedDish(dish);
@@ -104,24 +118,26 @@ export default function MenuScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <LinearGradient
-        colors={['#9a4759', '#b85a6e']}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.restaurantName}>{restaurant.name}</Text>
-          <View style={styles.restaurantInfo}>
-            <View style={styles.infoItem}>
-              <MapPin color="#fff" size={16} />
-              <Text style={styles.infoText}>{restaurant.address}</Text>
+      <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
+        <LinearGradient
+          colors={['#9a4759', '#b85a6e']}
+          style={styles.header}
+        >
+          <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+            <Text style={styles.restaurantName}>{restaurant.name}</Text>
+            <View style={styles.restaurantInfo}>
+              <View style={styles.infoItem}>
+                <MapPin color="#fff" size={16} />
+                <Text style={styles.infoText}>{restaurant.address}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <Clock color="#fff" size={16} />
+                <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
+              </View>
             </View>
-            <View style={styles.infoItem}>
-              <Clock color="#fff" size={16} />
-              <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+          </Animated.View>
+        </LinearGradient>
+      </Animated.View>
 
       <View style={styles.categoriesContainer}>
         <ScrollView 
@@ -160,9 +176,14 @@ export default function MenuScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView 
+      <Animated.ScrollView 
         style={styles.content} 
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
         {...panResponder.panHandlers}
       >
         {CATEGORIES.map(category => {
@@ -181,7 +202,7 @@ export default function MenuScreen() {
             </View>
           );
         })}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <Modal
         visible={showCategoryModal}
@@ -319,11 +340,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
+  headerContainer: {
+    overflow: 'hidden',
+  },
   header: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    justifyContent: 'flex-end',
   },
   headerContent: {
     marginTop: 10,

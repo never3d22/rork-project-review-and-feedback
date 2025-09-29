@@ -627,11 +627,19 @@ export default function AdminScreen() {
                       </Text>
                     )}
                     <Text style={styles.orderDetailInfo}>
-                      Приборы: {selectedOrder.utensils ? 'Нужны' : 'Не нужны'}
+                      Приборы: {selectedOrder.utensils ? `Нужны (${selectedOrder.utensilsCount || 1} шт.)` : 'Не нужны'}
                     </Text>
+                    {selectedOrder.deliveryTime && (
+                      <Text style={styles.orderDetailInfo}>
+                        Время: {selectedOrder.deliveryTime}
+                      </Text>
+                    )}
                     <Text style={styles.orderDetailInfo}>
                       Оплата: {selectedOrder.paymentMethod === 'card' ? 'Карта' : 
                                selectedOrder.paymentMethod === 'cash' ? 'Наличные' : 'Онлайн'}
+                    </Text>
+                    <Text style={styles.orderDetailInfo}>
+                      Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
                     </Text>
                   </View>
                 </ScrollView>

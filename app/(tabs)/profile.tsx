@@ -440,6 +440,10 @@ export default function ProfileScreen() {
                   ))}
                   
                   <View style={styles.orderSummary}>
+                    <View style={[styles.orderStatusBadge, { backgroundColor: getStatusColor(selectedOrder.status) }]}>
+                      <Text style={styles.orderStatusBadgeText}>{getStatusText(selectedOrder.status)}</Text>
+                    </View>
+                    
                     <Text style={styles.orderSummaryText}>Итого: {selectedOrder.total} ₽</Text>
                     <Text style={styles.orderSummaryText}>
                       Способ: {selectedOrder.deliveryType === 'pickup' ? 'Самовывоз' : 'Доставка'}
@@ -449,11 +453,19 @@ export default function ProfileScreen() {
                         Адрес: {selectedOrder.deliveryAddress}
                       </Text>
                     )}
+                    {selectedOrder.deliveryTime && (
+                      <Text style={styles.orderSummaryText}>
+                        Время: {selectedOrder.deliveryTime}
+                      </Text>
+                    )}
                     {selectedOrder.comments && (
                       <Text style={styles.orderSummaryText}>
                         Комментарий: {selectedOrder.comments}
                       </Text>
                     )}
+                    <Text style={styles.orderSummaryText}>
+                      Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
+                    </Text>
                   </View>
                 </ScrollView>
                 
@@ -846,5 +858,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 4,
+  },
+  orderStatusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  orderStatusBadgeText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
 });

@@ -763,9 +763,9 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   removeButton: {
-    padding: 4,
-    width: 24,
-    height: 24,
+    padding: 2,
+    width: 20,
+    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
