@@ -43,6 +43,8 @@ export default function AdminScreen() {
     image: '',
     category: CATEGORIES[0],
     available: true,
+    weight: '',
+    ingredients: '',
   });
   
   const [categoryForm, setCategoryForm] = useState({
@@ -66,6 +68,8 @@ export default function AdminScreen() {
       image: '',
       category: CATEGORIES[0],
       available: true,
+      weight: '',
+      ingredients: '',
     });
   };
 
@@ -81,6 +85,8 @@ export default function AdminScreen() {
       image: dishForm.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
       category: dishForm.category,
       available: dishForm.available,
+      weight: dishForm.weight || undefined,
+      ingredients: dishForm.ingredients ? dishForm.ingredients.split(',').map(i => i.trim()).filter(i => i) : undefined,
     };
     
     addDish(newDish);
@@ -97,6 +103,8 @@ export default function AdminScreen() {
       image: dish.image,
       category: dish.category,
       available: dish.available,
+      weight: dish.weight || '',
+      ingredients: dish.ingredients ? dish.ingredients.join(', ') : '',
     });
     setShowAddModal(true);
   };
@@ -113,6 +121,8 @@ export default function AdminScreen() {
       image: dishForm.image,
       category: dishForm.category,
       available: dishForm.available,
+      weight: dishForm.weight || undefined,
+      ingredients: dishForm.ingredients ? dishForm.ingredients.split(',').map(i => i.trim()).filter(i => i) : undefined,
     };
     
     updateDish(editingDish.id, updates);
@@ -458,36 +468,70 @@ export default function AdminScreen() {
             </View>
             
             <ScrollView style={styles.modalForm}>
-              <TextInput
-                style={styles.input}
-                placeholder="Название блюда"
-                value={dishForm.name}
-                onChangeText={(text) => setDishForm({ ...dishForm, name: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Название блюда *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Введите название блюда"
+                  value={dishForm.name}
+                  onChangeText={(text) => setDishForm({ ...dishForm, name: text })}
+                />
+              </View>
               
-              <TextInput
-                style={[styles.input, { minHeight: 80 }]}
-                placeholder="Описание"
-                value={dishForm.description}
-                onChangeText={(text) => setDishForm({ ...dishForm, description: text })}
-                multiline
-                textAlignVertical="top"
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Описание</Text>
+                <TextInput
+                  style={[styles.input, { minHeight: 80 }]}
+                  placeholder="Введите описание блюда"
+                  value={dishForm.description}
+                  onChangeText={(text) => setDishForm({ ...dishForm, description: text })}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Цена (₽)"
-                value={dishForm.price}
-                onChangeText={(text) => setDishForm({ ...dishForm, price: text })}
-                keyboardType="numeric"
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Цена *</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Введите цену в рублях"
+                  value={dishForm.price}
+                  onChangeText={(text) => setDishForm({ ...dishForm, price: text })}
+                  keyboardType="numeric"
+                />
+              </View>
               
-              <TextInput
-                style={styles.input}
-                placeholder="URL изображения"
-                value={dishForm.image}
-                onChangeText={(text) => setDishForm({ ...dishForm, image: text })}
-              />
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Вес/объем</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Например: 250г, 300мл"
+                  value={dishForm.weight}
+                  onChangeText={(text) => setDishForm({ ...dishForm, weight: text })}
+                />
+              </View>
+              
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Состав</Text>
+                <TextInput
+                  style={[styles.input, { minHeight: 60 }]}
+                  placeholder="Перечислите ингредиенты через запятую"
+                  value={dishForm.ingredients}
+                  onChangeText={(text) => setDishForm({ ...dishForm, ingredients: text })}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
+              
+              <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>URL изображения</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ссылка на изображение блюда"
+                  value={dishForm.image}
+                  onChangeText={(text) => setDishForm({ ...dishForm, image: text })}
+                />
+              </View>
               
               <View style={styles.pickerContainer}>
                 <Text style={styles.pickerLabel}>Категория:</Text>
@@ -1069,7 +1113,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  fieldContainer: {
     marginBottom: 16,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginBottom: 8,
   },
   pickerContainer: {
     marginBottom: 16,
