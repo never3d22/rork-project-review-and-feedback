@@ -291,7 +291,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   const sendRealSMS = async (phone: string, code: string): Promise<boolean> => {
     try {
       // Пример интеграции с SMS.ru
-      const SMS_API_ID = 'YOUR_SMS_RU_API_ID'; // Замените на ваш API ID
+      const SMS_API_ID = '457A5DBA-D814-BC10-DDD7-645DC659658E'; // Замените на ваш API ID
       const message = `Ваш код подтверждения: ${code}`;
       
       const response = await fetch('https://sms.ru/sms/send', {
