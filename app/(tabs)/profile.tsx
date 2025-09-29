@@ -39,17 +39,40 @@ export default function ProfileScreen() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userPhone, setUserPhone] = useState('');
+  const [userPassword, setUserPassword] = useState('');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
   const [newAddress, setNewAddress] = useState('');
 
   const handleLogin = () => {
-    if (!userName.trim() || !userEmail.trim()) {
+    if (!userPhone.trim() || !userPassword.trim()) {
       Alert.alert('Ошибка', 'Заполните все поля');
       return;
     }
-    loginAsUser(userName, userEmail);
-    setShowUserModal(false);
-    setUserName('');
-    setUserEmail('');
+    const success = loginAsUser(userPhone, userPassword);
+    if (success) {
+      setShowUserModal(false);
+      setUserPhone('');
+      setUserPassword('');
+    } else {
+      Alert.alert('Ошибка', 'Неверные данные');
+    }
+  };
+  
+  const handleAdminLogin = () => {
+    if (!adminUsername.trim() || !adminPassword.trim()) {
+      Alert.alert('Ошибка', 'Заполните все поля');
+      return;
+    }
+    const success = loginAsAdmin(adminUsername, adminPassword);
+    if (success) {
+      setShowAdminModal(false);
+      setAdminUsername('');
+      setAdminPassword('');
+    } else {
+      Alert.alert('Ошибка', 'Неверные данные для входа');
+    }
   };
 
   const handleAddAddress = () => {
@@ -98,7 +121,7 @@ export default function ProfileScreen() {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient
-          colors={['#FF6B6B', '#FF8E8E']}
+          colors={['#9a4759', '#b85a6e']}
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Профиль</Text>
@@ -138,18 +161,18 @@ export default function ProfileScreen() {
               
               <TextInput
                 style={styles.input}
-                placeholder="Ваше имя"
-                value={userName}
-                onChangeText={setUserName}
+                placeholder="Номер телефона"
+                value={userPhone}
+                onChangeText={setUserPhone}
+                keyboardType="phone-pad"
               />
               
               <TextInput
                 style={styles.input}
-                placeholder="Email"
-                value={userEmail}
-                onChangeText={setUserEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
+                placeholder="Пароль"
+                value={userPassword}
+                onChangeText={setUserPassword}
+                secureTextEntry
               />
               
               <View style={styles.modalButtons}>
@@ -180,7 +203,22 @@ export default function ProfileScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Вход администратора</Text>
-              <Text style={styles.modalText}>Вы войдете как администратор с полными правами</Text>
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Логин"
+                value={adminUsername}
+                onChangeText={setAdminUsername}
+                autoCapitalize="none"
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Пароль"
+                value={adminPassword}
+                onChangeText={setAdminPassword}
+                secureTextEntry
+              />
               
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -191,10 +229,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalButtonConfirm}
-                  onPress={() => {
-                    loginAsAdmin();
-                    setShowAdminModal(false);
-                  }}
+                  onPress={handleAdminLogin}
                 >
                   <Text style={styles.modalButtonConfirmText}>Войти</Text>
                 </TouchableOpacity>
@@ -209,7 +244,7 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E']}
+        colors={['#9a4759', '#b85a6e']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -244,7 +279,7 @@ export default function ProfileScreen() {
             style={styles.adminPanel}
             onPress={() => router.push('/admin' as any)}
           >
-            <Settings color="#FF6B6B" size={24} />
+            <Settings color="#9a4759" size={24} />
             <Text style={styles.adminPanelText}>Админ панель</Text>
           </TouchableOpacity>
         )}
@@ -258,7 +293,7 @@ export default function ProfileScreen() {
                 style={styles.addButton}
                 onPress={() => setShowAddressModal(true)}
               >
-                <Plus color="#FF6B6B" size={20} />
+                <Plus color="#9a4759" size={20} />
               </TouchableOpacity>
             </View>
             
@@ -297,7 +332,7 @@ export default function ProfileScreen() {
                     style={styles.viewOrderButton}
                     onPress={() => handleViewOrder(order)}
                   >
-                    <Eye color="#FF6B6B" size={16} />
+                    <Eye color="#9a4759" size={16} />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.orderDate}>
@@ -548,7 +583,7 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   loginButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     borderRadius: 16,
     padding: 18,
     width: '100%',
@@ -672,7 +707,7 @@ const styles = StyleSheet.create({
   orderTotal: {
     fontSize: 16,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
     marginBottom: 8,
   },
   orderStatus: {
@@ -692,7 +727,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -766,7 +801,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     alignItems: 'center',
   },
   modalButtonConfirmText: {
@@ -799,7 +834,7 @@ const styles = StyleSheet.create({
   orderItemPrice: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   orderSummary: {
     marginTop: 16,

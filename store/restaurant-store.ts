@@ -1,8 +1,8 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
-import { CartItem, Dish, Order, User, Restaurant } from '@/types/restaurant';
-import { MOCK_DISHES } from '@/constants/dishes';
+import { CartItem, Dish, Order, User, Restaurant, Category } from '@/types/restaurant';
+import { MOCK_DISHES, MOCK_CATEGORIES } from '@/constants/dishes';
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
@@ -45,7 +45,8 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [user, setUser] = useState<User | null>(null);
-  const [restaurant] = useState<Restaurant>({
+  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
+  const [restaurant, setRestaurant] = useState<Restaurant>({
     id: '1',
     name: 'Вкусная еда',
     address: 'ул. Пушкина, д. 10',
@@ -116,6 +117,10 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     });
   }, []);
 
+  const removeFromCart = useCallback((dishId: string) => {
+    setCart(prevCart => prevCart.filter(item => item.dish.id !== dishId));
+  }, []);
+
   const updateQuantity = useCallback((dishId: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(dishId);
@@ -126,11 +131,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         item.dish.id === dishId ? { ...item, quantity } : item
       )
     );
-  }, []);
-
-  const removeFromCart = useCallback((dishId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.dish.id !== dishId));
-  }, []);
+  }, [removeFromCart]);
 
   const clearCart = useCallback(() => {
     setCart([]);
@@ -161,23 +162,32 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     );
   }, []);
 
-  const loginAsAdmin = useCallback(() => {
-    setUser({
-      id: 'admin',
-      name: 'Администратор',
-      email: 'admin@restaurant.com',
-      isAdmin: true,
-    });
+  const loginAsAdmin = useCallback((username: string, password: string) => {
+    if (username === 'admin' && password === '1234') {
+      setUser({
+        id: 'admin',
+        name: 'Администратор',
+        email: 'admin@restaurant.com',
+        isAdmin: true,
+      });
+      return true;
+    }
+    return false;
   }, []);
 
-  const loginAsUser = useCallback((name: string, email: string) => {
-    setUser({
-      id: Date.now().toString(),
-      name,
-      email,
-      isAdmin: false,
-      addresses: [],
-    });
+  const loginAsUser = useCallback((phone: string, password: string) => {
+    // Простая проверка для тестирования
+    if (phone && password) {
+      setUser({
+        id: Date.now().toString(),
+        name: 'Пользователь',
+        email: phone,
+        isAdmin: false,
+        addresses: [],
+      });
+      return true;
+    }
+    return false;
   }, []);
 
   const logout = useCallback(() => {
@@ -189,18 +199,23 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   }, []);
 
   const addDish = useCallback((dish: Omit<Dish, 'id'>) => {
-    // This would normally be handled by the backend
-    console.log('Add dish:', dish);
+    const newDish: Dish = {
+      ...dish,
+      id: Date.now().toString(),
+    };
+    setDishes(prevDishes => [...prevDishes, newDish]);
   }, []);
 
   const updateDish = useCallback((dishId: string, updates: Partial<Dish>) => {
-    // This would normally be handled by the backend
-    console.log('Update dish:', dishId, updates);
+    setDishes(prevDishes => 
+      prevDishes.map(dish => 
+        dish.id === dishId ? { ...dish, ...updates } : dish
+      )
+    );
   }, []);
 
   const deleteDish = useCallback((dishId: string) => {
-    // This would normally be handled by the backend
-    console.log('Delete dish:', dishId);
+    setDishes(prevDishes => prevDishes.filter(dish => dish.id !== dishId));
   }, []);
 
   const toggleDishVisibility = useCallback((dishId: string) => {
@@ -211,12 +226,37 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     );
   }, []);
 
+  const updateRestaurant = useCallback((updates: Partial<Restaurant>) => {
+    setRestaurant(prevRestaurant => ({ ...prevRestaurant, ...updates }));
+  }, []);
+
+  const addCategory = useCallback((category: Omit<Category, 'id'>) => {
+    const newCategory: Category = {
+      ...category,
+      id: Date.now().toString(),
+    };
+    setCategories(prevCategories => [...prevCategories, newCategory]);
+  }, []);
+
+  const updateCategory = useCallback((categoryId: string, updates: Partial<Category>) => {
+    setCategories(prevCategories => 
+      prevCategories.map(category => 
+        category.id === categoryId ? { ...category, ...updates } : category
+      )
+    );
+  }, []);
+
+  const deleteCategory = useCallback((categoryId: string) => {
+    setCategories(prevCategories => prevCategories.filter(category => category.id !== categoryId));
+  }, []);
+
   return {
     dishes,
     cart,
     orders,
     user,
     restaurant,
+    categories,
     addToCart,
     updateQuantity,
     removeFromCart,
@@ -232,5 +272,9 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     updateDish,
     deleteDish,
     toggleDishVisibility,
+    updateRestaurant,
+    addCategory,
+    updateCategory,
+    deleteCategory,
   };
 });

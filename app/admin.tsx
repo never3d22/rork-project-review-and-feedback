@@ -25,13 +25,15 @@ import { CATEGORIES, MOCK_CATEGORIES } from '@/constants/dishes';
 import { Dish, Order, Category } from '@/types/restaurant';
 
 export default function AdminScreen() {
-  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus, toggleDishVisibility } = useRestaurant();
-  const [activeTab, setActiveTab] = useState<'dishes' | 'orders' | 'categories'>('dishes');
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
+  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus, toggleDishVisibility, restaurant, updateRestaurant, categories, addCategory, updateCategory, deleteCategory } = useRestaurant();
+  const [activeTab, setActiveTab] = useState<'dishes' | 'orders' | 'categories' | 'settings'>('dishes');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   
   // Form states
   const [dishForm, setDishForm] = useState({
@@ -41,6 +43,19 @@ export default function AdminScreen() {
     image: '',
     category: CATEGORIES[0],
     available: true,
+  });
+  
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    order: 1,
+  });
+  
+  const [restaurantForm, setRestaurantForm] = useState({
+    name: restaurant.name,
+    address: restaurant.address,
+    phone: restaurant.phone,
+    workingHours: restaurant.workingHours,
+    deliveryTime: restaurant.deliveryTime,
   });
 
   const resetForm = () => {
@@ -264,16 +279,98 @@ export default function AdminScreen() {
       case 'categories':
         return (
           <View style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Управление категориями</Text>
+            <View style={styles.tabHeader}>
+              <Text style={styles.tabTitle}>Управление категориями</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  setCategoryForm({ name: '', order: categories.length + 1 });
+                  setEditingCategory(null);
+                  setShowCategoryModal(true);
+                }}
+              >
+                <Plus color="#fff" size={20} />
+                <Text style={styles.addButtonText}>Добавить</Text>
+              </TouchableOpacity>
+            </View>
             
             <ScrollView showsVerticalScrollIndicator={false}>
               {categories.map(category => (
                 <View key={category.id} style={styles.categoryCard}>
-                  <Text style={styles.categoryName}>{category.name}</Text>
-                  <Text style={styles.categoryOrder}>Порядок: {category.order}</Text>
+                  <View style={styles.categoryInfo}>
+                    <Text style={styles.categoryName}>{category.name}</Text>
+                    <Text style={styles.categoryOrder}>Порядок: {category.order}</Text>
+                  </View>
+                  <View style={styles.categoryActions}>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => {
+                        setEditingCategory(category);
+                        setCategoryForm({ name: category.name, order: category.order });
+                        setShowCategoryModal(true);
+                      }}
+                    >
+                      <Edit3 color="#2196F3" size={16} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => deleteCategory(category.id)}
+                    >
+                      <Trash2 color="#ff4444" size={16} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
             </ScrollView>
+          </View>
+        );
+        
+      case 'settings':
+        return (
+          <View style={styles.tabContent}>
+            <View style={styles.tabHeader}>
+              <Text style={styles.tabTitle}>Настройки ресторана</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => {
+                  setRestaurantForm({
+                    name: restaurant.name,
+                    address: restaurant.address,
+                    phone: restaurant.phone,
+                    workingHours: restaurant.workingHours,
+                    deliveryTime: restaurant.deliveryTime,
+                  });
+                  setShowSettingsModal(true);
+                }}
+              >
+                <Edit3 color="#fff" size={20} />
+                <Text style={styles.addButtonText}>Редактировать</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.settingsCard}>
+              <Text style={styles.settingsTitle}>Информация о ресторане</Text>
+              <View style={styles.settingsItem}>
+                <Text style={styles.settingsLabel}>Название:</Text>
+                <Text style={styles.settingsValue}>{restaurant.name}</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Text style={styles.settingsLabel}>Адрес:</Text>
+                <Text style={styles.settingsValue}>{restaurant.address}</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Text style={styles.settingsLabel}>Телефон:</Text>
+                <Text style={styles.settingsValue}>{restaurant.phone}</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Text style={styles.settingsLabel}>Часы работы:</Text>
+                <Text style={styles.settingsValue}>{restaurant.workingHours}</Text>
+              </View>
+              <View style={styles.settingsItem}>
+                <Text style={styles.settingsLabel}>Время доставки:</Text>
+                <Text style={styles.settingsValue}>{restaurant.deliveryTime}</Text>
+              </View>
+            </View>
           </View>
         );
         
@@ -320,6 +417,12 @@ export default function AdminScreen() {
           onPress={() => setActiveTab('categories')}
         >
           <Text style={[styles.tabText, activeTab === 'categories' && styles.activeTabText]}>Категории</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
+          onPress={() => setActiveTab('settings')}
+        >
+          <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Настройки</Text>
         </TouchableOpacity>
       </View>
       
@@ -490,6 +593,141 @@ export default function AdminScreen() {
                 </ScrollView>
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Category Modal */}
+      <Modal
+        visible={showCategoryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCategoryModal(false);
+          setEditingCategory(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setEditingCategory(null);
+                }}
+              >
+                <X color="#666" size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalForm}>
+              <TextInput
+                style={styles.input}
+                placeholder="Название категории"
+                value={categoryForm.name}
+                onChangeText={(text) => setCategoryForm({ ...categoryForm, name: text })}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Порядок сортировки"
+                value={categoryForm.order.toString()}
+                onChangeText={(text) => setCategoryForm({ ...categoryForm, order: parseInt(text) || 1 })}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => {
+                if (editingCategory) {
+                  updateCategory(editingCategory.id, categoryForm);
+                } else {
+                  addCategory(categoryForm);
+                }
+                setShowCategoryModal(false);
+                setEditingCategory(null);
+              }}
+            >
+              <Save color="#fff" size={20} />
+              <Text style={styles.saveButtonText}>
+                {editingCategory ? 'Сохранить' : 'Добавить'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Restaurant Settings Modal */}
+      <Modal
+        visible={showSettingsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSettingsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Настройки ресторана</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowSettingsModal(false)}
+              >
+                <X color="#666" size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalForm}>
+              <TextInput
+                style={styles.input}
+                placeholder="Название ресторана"
+                value={restaurantForm.name}
+                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, name: text })}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Адрес"
+                value={restaurantForm.address}
+                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, address: text })}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Телефон"
+                value={restaurantForm.phone}
+                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, phone: text })}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Часы работы"
+                value={restaurantForm.workingHours}
+                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, workingHours: text })}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Время доставки"
+                value={restaurantForm.deliveryTime}
+                onChangeText={(text) => setRestaurantForm({ ...restaurantForm, deliveryTime: text })}
+              />
+            </ScrollView>
+            
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => {
+                updateRestaurant(restaurantForm);
+                setShowSettingsModal(false);
+              }}
+            >
+              <Save color="#fff" size={20} />
+              <Text style={styles.saveButtonText}>Сохранить</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -700,6 +938,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -718,6 +958,52 @@ const styles = StyleSheet.create({
   categoryOrder: {
     fontSize: 14,
     color: '#666',
+  },
+  categoryInfo: {
+    flex: 1,
+  },
+  categoryActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  settingsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  settingsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 16,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  settingsLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#333',
+    flex: 1,
+  },
+  settingsValue: {
+    fontSize: 16,
+    color: '#666',
+    flex: 2,
+    textAlign: 'right' as const,
   },
   emptyText: {
     fontSize: 16,
