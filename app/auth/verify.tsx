@@ -38,31 +38,36 @@ export default function VerifyCodeScreen() {
   };
 
   const handleCodeChange = (text: string, index: number) => {
-    if (text.length > 1) {
-      // Если вставили несколько символов, распределяем их по полям
-      const digits = text.replace(/\D/g, '').slice(0, 6);
+    // Удаляем все нецифровые символы
+    const cleanText = text.replace(/\D/g, '');
+    
+    if (cleanText.length > 1) {
+      // Если вставили несколько символов (например, скопировали код)
+      const digits = cleanText.slice(0, 6);
       const newCode = [...code];
       
-      for (let i = 0; i < digits.length && i < 6; i++) {
-        newCode[i] = digits[i];
+      // Заполняем поля начиная с текущего индекса
+      for (let i = 0; i < digits.length && (index + i) < 6; i++) {
+        newCode[index + i] = digits[i];
       }
       
       setCode(newCode);
       
-      // Фокусируемся на следующем пустом поле или последнем
-      const nextIndex = Math.min(digits.length, 5);
+      // Фокусируемся на следующем пустом поле или последнем заполненном
+      const nextIndex = Math.min(index + digits.length, 5);
       setTimeout(() => {
         inputRefs.current[nextIndex]?.focus();
       }, 10);
       return;
     }
 
+    // Обычный ввод одной цифры
     const newCode = [...code];
-    newCode[index] = text.replace(/\D/g, '');
+    newCode[index] = cleanText;
     setCode(newCode);
 
-    // Автоматически переходим к следующему полю
-    if (text && index < 5) {
+    // Автоматически переходим к следующему полю при вводе цифры
+    if (cleanText && index < 5) {
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus();
       }, 10);
@@ -164,7 +169,7 @@ export default function VerifyCodeScreen() {
                   onChangeText={(text) => handleCodeChange(text, index)}
                   onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
                   keyboardType="number-pad"
-                  maxLength={6}
+                  maxLength={1}
                   textAlign="center"
                   selectTextOnFocus
                   autoFocus={index === 0}
