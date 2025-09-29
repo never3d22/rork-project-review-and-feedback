@@ -93,7 +93,7 @@ export default function MenuScreen() {
       key={item.id} 
       style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}
       onPress={() => item.available ? handleDishPress(item) : null}
-      activeOpacity={item.available ? 0.8 : 1}
+      activeOpacity={item.available ? 0.9 : 1}
       disabled={!item.available}
     >
       <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
@@ -127,6 +127,7 @@ export default function MenuScreen() {
                   e.stopPropagation();
                   addToCart(item);
                 }}
+                activeOpacity={0.8}
               >
                 <Plus color="#fff" size={20} />
               </TouchableOpacity>
@@ -165,6 +166,7 @@ export default function MenuScreen() {
         <TouchableOpacity 
           style={styles.orderStatusBlock}
           onPress={() => router.push('/(tabs)/profile')}
+          activeOpacity={0.9}
         >
           <View style={styles.orderStatusContent}>
             <View style={styles.orderStatusLeft}>
@@ -190,6 +192,7 @@ export default function MenuScreen() {
               selectedCategory === 'Все' && styles.categoryButtonActive
             ]}
             onPress={() => setShowCategoryModal(true)}
+            activeOpacity={0.8}
           >
             <Text style={[
               styles.categoryButtonText,
@@ -205,6 +208,7 @@ export default function MenuScreen() {
                 selectedCategory === category && styles.categoryButtonActive
               ]}
               onPress={() => setSelectedCategory(category)}
+              activeOpacity={0.8}
             >
               <Text style={[
                 styles.categoryButtonText,
@@ -379,18 +383,27 @@ export default function MenuScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f5f7fa',
   },
   headerContainer: {
     overflow: 'hidden',
+    zIndex: 10,
   },
   header: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     justifyContent: 'flex-end',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   headerContent: {
     marginTop: 10,
@@ -400,6 +413,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold' as const,
     color: '#fff',
     marginBottom: 12,
+    letterSpacing: 0.5,
   },
   restaurantInfo: {
     gap: 8,
@@ -424,8 +438,9 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 22,
     fontWeight: 'bold' as const,
-    color: '#333',
+    color: '#1a1a1a',
     marginBottom: 16,
+    letterSpacing: 0.4,
   },
   dishesGrid: {
     flexDirection: 'row',
@@ -435,16 +450,16 @@ const styles = StyleSheet.create({
   },
   dishCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
     overflow: 'hidden',
     width: '48%',
   },
@@ -454,19 +469,21 @@ const styles = StyleSheet.create({
     resizeMode: 'cover' as const,
   },
   dishInfo: {
-    padding: 12,
+    padding: 16,
   },
   dishName: {
     fontSize: 16,
     fontWeight: 'bold' as const,
-    color: '#333',
+    color: '#1a1a1a',
     marginBottom: 6,
+    letterSpacing: 0.3,
   },
   dishDescription: {
     fontSize: 12,
-    color: '#666',
+    color: '#6b7280',
     lineHeight: 16,
     marginBottom: 10,
+    letterSpacing: 0.2,
   },
   dishFooter: {
     flexDirection: 'row',
@@ -477,36 +494,59 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#9a4759',
+    letterSpacing: 0.3,
   },
   addButton: {
     backgroundColor: '#9a4759',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   categoriesContainer: {
     backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   categoriesScrollContent: {
     paddingHorizontal: 20,
     gap: 12,
   },
   categoryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
     backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 1.5,
+    borderColor: '#e8eaed',
   },
   categoryButtonActive: {
     backgroundColor: '#9a4759',
     borderColor: '#9a4759',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   categoryButtonText: {
     fontSize: 14,
@@ -694,15 +734,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: 20,
     marginVertical: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    borderLeftWidth: 4,
+    borderLeftColor: '#9a4759',
   },
   orderStatusContent: {
     flexDirection: 'row',

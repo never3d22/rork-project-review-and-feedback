@@ -101,6 +101,7 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => onUpdateQuantity(item.dish.id, item.quantity - 1)}
+              activeOpacity={0.7}
             >
               <Minus color="#9a4759" size={16} />
             </TouchableOpacity>
@@ -108,17 +109,13 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => onUpdateQuantity(item.dish.id, item.quantity + 1)}
+              activeOpacity={0.7}
             >
               <Plus color="#9a4759" size={16} />
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => onRemove(item.dish.id)}
-        >
-          <Trash2 color="#ff4444" size={16} />
-        </TouchableOpacity>
+
       </Animated.View>
     </View>
   );
@@ -270,6 +267,7 @@ export default function CartScreen() {
               deliveryType === 'pickup' && styles.tabActive
             ]}
             onPress={() => setDeliveryType('pickup')}
+            activeOpacity={0.8}
           >
             <MapPin color={deliveryType === 'pickup' ? '#fff' : '#9a4759'} size={20} />
             <Text style={[
@@ -283,6 +281,7 @@ export default function CartScreen() {
               deliveryType === 'delivery' && styles.tabActive
             ]}
             onPress={() => setDeliveryType('delivery')}
+            activeOpacity={0.8}
           >
             <Truck color={deliveryType === 'delivery' ? '#fff' : '#9a4759'} size={20} />
             <Text style={[
@@ -600,13 +599,21 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f5f7fa',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: 'row',
@@ -629,29 +636,37 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 6,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   tab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 16,
     gap: 8,
   },
   tabActive: {
     backgroundColor: '#9a4759',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   tabText: {
     fontSize: 14,
@@ -726,17 +741,17 @@ const styles = StyleSheet.create({
   },
   pickupInfo: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   pickupText: {
     fontSize: 14,
@@ -745,17 +760,17 @@ const styles = StyleSheet.create({
   },
   addressSection: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   addressInput: {
     padding: 16,
@@ -768,17 +783,17 @@ const styles = StyleSheet.create({
   },
   dishesSection: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   sectionTitle: {
     fontSize: 18,
@@ -789,15 +804,19 @@ const styles = StyleSheet.create({
   cartItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 2,
   },
   itemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    marginRight: 16,
   },
   itemInfo: {
     flex: 1,
@@ -820,12 +839,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   quantity: {
     fontSize: 16,
@@ -834,13 +861,7 @@ const styles = StyleSheet.create({
     minWidth: 20,
     textAlign: 'center' as const,
   },
-  removeButton: {
-    padding: 2,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+
   recommendationsSection: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -1046,9 +1067,17 @@ const styles = StyleSheet.create({
   },
   checkoutButton: {
     backgroundColor: '#9a4759',
-    borderRadius: 16,
-    padding: 18,
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   checkoutButtonText: {
     fontSize: 18,
@@ -1139,17 +1168,19 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    width: 100,
+    width: 80,
     backgroundColor: '#ff4444',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 16,
+    marginVertical: 4,
   },
   deleteButton: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
     width: '100%',
+    paddingVertical: 12,
   },
   deleteText: {
     color: '#fff',

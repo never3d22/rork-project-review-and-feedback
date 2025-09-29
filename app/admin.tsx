@@ -187,7 +187,6 @@ export default function AdminScreen() {
                         <View style={styles.dishInfo}>
                           <Text style={styles.dishName}>{dish.name}</Text>
                           <Text style={styles.dishPrice}>{dish.price} ₽</Text>
-
                         </View>
                         <View style={styles.dishActions}>
                           <TouchableOpacity
@@ -806,7 +805,7 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f5f7fa',
   },
   header: {
     paddingHorizontal: 20,
@@ -860,10 +859,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#9a4759',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     gap: 8,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   addButtonText: {
     color: '#fff',
@@ -880,19 +887,19 @@ const styles = StyleSheet.create({
   },
   dishCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   dishImage: {
     width: 60,
@@ -940,17 +947,17 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   orderHeader: {
     flexDirection: 'row',
@@ -1006,19 +1013,19 @@ const styles = StyleSheet.create({
   },
   categoryCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
     marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   categoryName: {
     fontSize: 16,
@@ -1039,16 +1046,16 @@ const styles = StyleSheet.create({
   },
   settingsCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
+    padding: 24,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   settingsTitle: {
     fontSize: 18,
@@ -1196,9 +1203,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#9a4759',
     margin: 20,
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
     gap: 8,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   saveButtonText: {
     fontSize: 16,
