@@ -18,10 +18,6 @@ import {
   Trash2, 
   Save,
   X,
-  Settings,
-  Store,
-  Clock,
-  ShoppingBag,
   Eye,
 } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
@@ -29,8 +25,8 @@ import { CATEGORIES, MOCK_CATEGORIES } from '@/constants/dishes';
 import { Dish, Order, Category } from '@/types/restaurant';
 
 export default function AdminScreen() {
-  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus } = useRestaurant();
-  const [activeTab, setActiveTab] = useState<'dishes' | 'orders' | 'settings' | 'categories'>('dishes');
+  const { dishes, addDish, updateDish, deleteDish, user, orders, updateOrderStatus, toggleDishVisibility } = useRestaurant();
+  const [activeTab, setActiveTab] = useState<'dishes' | 'orders' | 'categories'>('dishes');
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
@@ -165,12 +161,17 @@ export default function AdminScreen() {
                         <View style={styles.dishInfo}>
                           <Text style={styles.dishName}>{dish.name}</Text>
                           <Text style={styles.dishPrice}>{dish.price} ₽</Text>
-                          <Text style={[
-                            styles.dishStatus,
-                            { color: dish.available ? '#4CAF50' : '#ff4444' }
-                          ]}>
-                            {dish.available ? 'Доступно' : 'Недоступно'}
-                          </Text>
+                          <TouchableOpacity
+                            style={[
+                              styles.statusToggle,
+                              { backgroundColor: dish.available ? '#4CAF50' : '#ff4444' }
+                            ]}
+                            onPress={() => toggleDishVisibility(dish.id)}
+                          >
+                            <Text style={styles.statusToggleText}>
+                              {dish.available ? 'Скрыть' : 'Показать'}
+                            </Text>
+                          </TouchableOpacity>
                         </View>
                         <View style={styles.dishActions}>
                           <TouchableOpacity
@@ -210,7 +211,7 @@ export default function AdminScreen() {
                         style={styles.viewButton}
                         onPress={() => handleViewOrder(order)}
                       >
-                        <Eye color="#FF6B6B" size={16} />
+                        <Eye color="#9a4759" size={16} />
                       </TouchableOpacity>
                     </View>
                     
@@ -260,26 +261,19 @@ export default function AdminScreen() {
           </View>
         );
         
-      case 'settings':
+      case 'categories':
         return (
           <View style={styles.tabContent}>
-            <Text style={styles.tabTitle}>Настройки ресторана</Text>
+            <Text style={styles.tabTitle}>Управление категориями</Text>
             
-            <View style={styles.settingsCard}>
-              <Store color="#FF6B6B" size={24} />
-              <View style={styles.settingsInfo}>
-                <Text style={styles.settingsTitle}>Информация о ресторане</Text>
-                <Text style={styles.settingsSubtitle}>Название, адрес, контакты</Text>
-              </View>
-            </View>
-            
-            <View style={styles.settingsCard}>
-              <Clock color="#FF6B6B" size={24} />
-              <View style={styles.settingsInfo}>
-                <Text style={styles.settingsTitle}>Время работы</Text>
-                <Text style={styles.settingsSubtitle}>График работы ресторана</Text>
-              </View>
-            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {categories.map(category => (
+                <View key={category.id} style={styles.categoryCard}>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                  <Text style={styles.categoryOrder}>Порядок: {category.order}</Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         );
         
@@ -302,7 +296,7 @@ export default function AdminScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E']}
+        colors={['#9a4759', '#b85a6e']}
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Админ панель</Text>
@@ -322,10 +316,10 @@ export default function AdminScreen() {
           <Text style={[styles.tabText, activeTab === 'orders' && styles.activeTabText]}>Заказы</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'settings' && styles.activeTab]}
-          onPress={() => setActiveTab('settings')}
+          style={[styles.tab, activeTab === 'categories' && styles.activeTab]}
+          onPress={() => setActiveTab('categories')}
         >
-          <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Настройки</Text>
+          <Text style={[styles.tabText, activeTab === 'categories' && styles.activeTabText]}>Категории</Text>
         </TouchableOpacity>
       </View>
       
@@ -420,7 +414,7 @@ export default function AdminScreen() {
                 <Switch
                   value={dishForm.available}
                   onValueChange={(value) => setDishForm({ ...dishForm, available: value })}
-                  trackColor={{ false: '#e0e0e0', true: '#FF6B6B' }}
+                  trackColor={{ false: '#e0e0e0', true: '#9a4759' }}
                   thumbColor={dishForm.available ? '#fff' : '#f4f3f4'}
                 />
               </View>
@@ -463,7 +457,7 @@ export default function AdminScreen() {
                 <ScrollView style={styles.orderDetails}>
                   <Text style={styles.orderDetailTitle}>Состав заказа:</Text>
                   {selectedOrder.items.map((item, index) => (
-                    <View key={index} style={styles.orderDetailItem}>
+                    <View key={`${item.dish.id}-${index}`} style={styles.orderDetailItem}>
                       <Text style={styles.orderDetailName}>{item.dish.name}</Text>
                       <Text style={styles.orderDetailQuantity}>x{item.quantity}</Text>
                       <Text style={styles.orderDetailPrice}>{item.dish.price * item.quantity} ₽</Text>
@@ -531,7 +525,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#FF6B6B',
+    borderBottomColor: '#9a4759',
   },
   tabText: {
     fontSize: 16,
@@ -539,7 +533,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   activeTabText: {
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   tabContent: {
     flex: 1,
@@ -559,7 +553,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -611,13 +605,19 @@ const styles = StyleSheet.create({
   },
   dishPrice: {
     fontSize: 14,
-    color: '#FF6B6B',
+    color: '#9a4759',
     fontWeight: '600' as const,
-    marginBottom: 2,
+    marginBottom: 8,
   },
-  dishStatus: {
+  statusToggle: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusToggleText: {
     fontSize: 12,
     fontWeight: '600' as const,
+    color: '#fff',
   },
   dishActions: {
     flexDirection: 'row',
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
   orderTotal: {
     fontSize: 16,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
     marginBottom: 8,
   },
   orderStatus: {
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -695,14 +695,11 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#fff',
   },
-  settingsCard: {
+  categoryCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -712,16 +709,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  settingsInfo: {
-    flex: 1,
-  },
-  settingsTitle: {
+  categoryName: {
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#333',
     marginBottom: 4,
   },
-  settingsSubtitle: {
+  categoryOrder: {
     fontSize: 14,
     color: '#666',
   },
@@ -809,8 +803,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   categoryChipActive: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
+    borderColor: '#9a4759',
   },
   categoryChipText: {
     fontSize: 14,
@@ -834,7 +828,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     margin: 20,
     padding: 16,
     borderRadius: 12,
@@ -876,7 +870,7 @@ const styles = StyleSheet.create({
   orderDetailPrice: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   orderDetailSummary: {
     marginTop: 16,
@@ -887,7 +881,7 @@ const styles = StyleSheet.create({
   orderDetailTotal: {
     fontSize: 18,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
     marginBottom: 8,
   },
   orderDetailInfo: {

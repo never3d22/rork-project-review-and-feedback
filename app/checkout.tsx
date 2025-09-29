@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Switch,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +14,6 @@ import {
   CreditCard, 
   Banknote, 
   Smartphone,
-  Utensils,
   MessageSquare,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -26,7 +24,7 @@ type PaymentMethod = 'card' | 'cash' | 'online';
 export default function CheckoutScreen() {
   const { cart, getCartTotal, createOrder } = useRestaurant();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
-  const [needUtensils, setNeedUtensils] = useState(true);
+  const needUtensils = true;
   const [comments, setComments] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -99,7 +97,7 @@ export default function CheckoutScreen() {
                 onPress={() => setPaymentMethod(option.id)}
               >
                 <IconComponent 
-                  color={paymentMethod === option.id ? '#fff' : '#FF6B6B'} 
+                  color={paymentMethod === option.id ? '#fff' : '#9a4759'} 
                   size={24} 
                 />
                 <Text style={[
@@ -117,20 +115,7 @@ export default function CheckoutScreen() {
           })}
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.switchRow}>
-            <View style={styles.switchInfo}>
-              <Utensils color="#333" size={20} />
-              <Text style={styles.switchLabel}>Нужны приборы</Text>
-            </View>
-            <Switch
-              value={needUtensils}
-              onValueChange={setNeedUtensils}
-              trackColor={{ false: '#e0e0e0', true: '#FF6B6B' }}
-              thumbColor={needUtensils ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-        </View>
+
 
         <View style={styles.section}>
           <View style={styles.commentHeader}>
@@ -151,7 +136,7 @@ export default function CheckoutScreen() {
 
       <View style={styles.footer}>
         <LinearGradient
-          colors={['#FF6B6B', '#FF8E8E']}
+          colors={['#9a4759', '#b85a6e']}
           style={styles.placeOrderButton}
         >
           <TouchableOpacity
@@ -266,7 +251,7 @@ const styles = StyleSheet.create({
   itemPrice: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   totalRow: {
     flexDirection: 'row',
@@ -275,7 +260,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     marginTop: 16,
     borderTopWidth: 2,
-    borderTopColor: '#FF6B6B',
+    borderTopColor: '#9a4759',
   },
   totalLabel: {
     fontSize: 20,
@@ -285,7 +270,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   paymentOption: {
     flexDirection: 'row',
@@ -298,8 +283,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   paymentOptionActive: {
-    backgroundColor: '#FF6B6B',
-    borderColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
+    borderColor: '#9a4759',
   },
   paymentOptionText: {
     fontSize: 16,
@@ -398,7 +383,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   modalButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     borderRadius: 12,
     paddingHorizontal: 32,
     paddingVertical: 16,

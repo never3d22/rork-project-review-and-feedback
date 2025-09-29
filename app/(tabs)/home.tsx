@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,31 +9,48 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Plus, Clock, MapPin } from 'lucide-react-native';
+import { Plus, Clock, MapPin, Eye, EyeOff } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function MenuScreen() {
-  const { dishes, addToCart, restaurant } = useRestaurant();
+  const { dishes, addToCart, restaurant, user, toggleDishVisibility } = useRestaurant();
+  const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const insets = useSafeAreaInsets();
 
   const renderDishCard = (item: Dish) => (
-    <View key={item.id} style={styles.dishCard}>
-      <Image source={{ uri: item.image }} style={styles.dishImage} />
+    <View key={item.id} style={[styles.dishCard, !item.available && styles.dishCardUnavailable]}>
+      <Image source={{ uri: item.image }} style={[styles.dishImage, !item.available && styles.dishImageUnavailable]} />
       <View style={styles.dishInfo}>
-        <Text style={styles.dishName}>{item.name}</Text>
-        <Text style={styles.dishDescription} numberOfLines={2}>
+        <Text style={[styles.dishName, !item.available && styles.dishNameUnavailable]}>{item.name}</Text>
+        <Text style={[styles.dishDescription, !item.available && styles.dishDescriptionUnavailable]} numberOfLines={2}>
           {item.description}
         </Text>
         <View style={styles.dishFooter}>
-          <Text style={styles.dishPrice}>{item.price} ₽</Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => addToCart(item)}
-          >
-            <Plus color="#fff" size={20} />
-          </TouchableOpacity>
+          <Text style={[styles.dishPrice, !item.available && styles.dishPriceUnavailable]}>{item.price} ₽</Text>
+          <View style={styles.dishActions}>
+            {user?.isAdmin && (
+              <TouchableOpacity
+                style={styles.visibilityButton}
+                onPress={() => toggleDishVisibility(item.id)}
+              >
+                {item.available ? (
+                  <Eye color="#9a4759" size={20} />
+                ) : (
+                  <EyeOff color="#999" size={20} />
+                )}
+              </TouchableOpacity>
+            )}
+            {item.available && (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => addToCart(item)}
+              >
+                <Plus color="#fff" size={20} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -42,7 +59,7 @@ export default function MenuScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E']}
+        colors={['#9a4759', '#b85a6e']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -60,9 +77,46 @@ export default function MenuScreen() {
         </View>
       </LinearGradient>
 
+      <View style={styles.categoriesContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+          <TouchableOpacity
+            style={[
+              styles.categoryFilter,
+              selectedCategory === 'Все' && styles.categoryFilterActive
+            ]}
+            onPress={() => setSelectedCategory('Все')}
+          >
+            <Text style={[
+              styles.categoryFilterText,
+              selectedCategory === 'Все' && styles.categoryFilterTextActive
+            ]}>Все</Text>
+          </TouchableOpacity>
+          {CATEGORIES.map(category => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryFilter,
+                selectedCategory === category && styles.categoryFilterActive
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text style={[
+                styles.categoryFilterText,
+                selectedCategory === category && styles.categoryFilterTextActive
+              ]}>{category}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {CATEGORIES.map(category => {
-          const categoryDishes = dishes.filter(dish => dish.category === category && dish.available);
+          if (selectedCategory !== 'Все' && selectedCategory !== category) return null;
+          
+          const categoryDishes = dishes.filter(dish => 
+            dish.category === category && 
+            (user?.isAdmin || dish.available)
+          );
           if (categoryDishes.length === 0) return null;
 
           return (
@@ -165,14 +219,65 @@ const styles = StyleSheet.create({
   dishPrice: {
     fontSize: 20,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   addButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  categoriesContainer: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  categoriesScroll: {
+    paddingHorizontal: 20,
+  },
+  categoryFilter: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#9a4759',
+    marginRight: 8,
+  },
+  categoryFilterActive: {
+    backgroundColor: '#9a4759',
+  },
+  categoryFilterText: {
+    fontSize: 14,
+    color: '#9a4759',
+    fontWeight: '600' as const,
+  },
+  categoryFilterTextActive: {
+    color: '#fff',
+  },
+  dishCardUnavailable: {
+    opacity: 0.6,
+  },
+  dishImageUnavailable: {
+    opacity: 0.5,
+  },
+  dishNameUnavailable: {
+    color: '#999',
+  },
+  dishDescriptionUnavailable: {
+    color: '#999',
+  },
+  dishPriceUnavailable: {
+    color: '#999',
+  },
+  dishActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  visibilityButton: {
+    padding: 8,
   },
 });

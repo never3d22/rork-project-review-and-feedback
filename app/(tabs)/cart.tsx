@@ -11,26 +11,30 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Minus, Plus, Trash2, ShoppingBag, Utensils, Truck, MapPin } from 'lucide-react-native';
+import { Minus, Plus, Trash2, ShoppingBag, Utensils, Truck, MapPin, Clock } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 
 export default function CartScreen() {
-  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, dishes, addToCart, restaurant } = useRestaurant();
+  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant } = useRestaurant();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showEmptyModal, setShowEmptyModal] = useState(false);
   const [utensilsCount, setUtensilsCount] = useState(1);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [deliveryTime, setDeliveryTime] = useState<string>('Сразу');
   const insets = useSafeAreaInsets();
 
-  const getRecommendedDishes = () => {
-    const cartDishIds = cart.map(item => item.dish.id);
-    return dishes.filter(dish => 
-      dish.available && 
-      !cartDishIds.includes(dish.id) &&
-      dish.price <= 500
-    ).slice(0, 3);
+  const getDeliveryTimes = () => {
+    const now = new Date();
+    const times = ['Сразу'];
+    
+    for (let i = 0; i < 8; i++) {
+      const time = new Date(now.getTime() + (i + 1) * 30 * 60000);
+      times.push(time.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }));
+    }
+    
+    return times;
   };
 
   const handleClearCart = () => {
@@ -47,12 +51,10 @@ export default function CartScreen() {
   };
 
   if (cart.length === 0) {
-    const recommendedDishes = getRecommendedDishes();
-    
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <LinearGradient
-          colors={['#FF6B6B', '#FF8E8E']}
+          colors={['#9a4759', '#b85a6e']}
           style={styles.header}
         >
           <Text style={styles.headerTitle}>Корзина</Text>
@@ -62,27 +64,6 @@ export default function CartScreen() {
           <ShoppingBag color="#ccc" size={80} />
           <Text style={styles.emptyTitle}>Корзина пуста</Text>
           <Text style={styles.emptySubtitle}>Добавьте блюда из меню</Text>
-          
-          {recommendedDishes.length > 0 && (
-            <View style={styles.recommendedSection}>
-              <Text style={styles.recommendedTitle}>Рекомендуем попробовать</Text>
-              {recommendedDishes.map(dish => (
-                <View key={dish.id} style={styles.recommendedCard}>
-                  <Image source={{ uri: dish.image }} style={styles.recommendedImage} />
-                  <View style={styles.recommendedInfo}>
-                    <Text style={styles.recommendedName}>{dish.name}</Text>
-                    <Text style={styles.recommendedPrice}>{dish.price} ₽</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.recommendedAddButton}
-                    onPress={() => addToCart(dish)}
-                  >
-                    <Plus color="#fff" size={20} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
       </View>
     );
@@ -91,7 +72,7 @@ export default function CartScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <LinearGradient
-        colors={['#FF6B6B', '#FF8E8E']}
+        colors={['#9a4759', '#b85a6e']}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -117,14 +98,14 @@ export default function CartScreen() {
                   style={styles.quantityButton}
                   onPress={() => updateQuantity(item.dish.id, item.quantity - 1)}
                 >
-                  <Minus color="#FF6B6B" size={16} />
+                  <Minus color="#9a4759" size={16} />
                 </TouchableOpacity>
                 <Text style={styles.quantity}>{item.quantity}</Text>
                 <TouchableOpacity
                   style={styles.quantityButton}
                   onPress={() => updateQuantity(item.dish.id, item.quantity + 1)}
                 >
-                  <Plus color="#FF6B6B" size={16} />
+                  <Plus color="#9a4759" size={16} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -147,7 +128,7 @@ export default function CartScreen() {
               ]}
               onPress={() => setDeliveryType('pickup')}
             >
-              <MapPin color={deliveryType === 'pickup' ? '#fff' : '#FF6B6B'} size={20} />
+              <MapPin color={deliveryType === 'pickup' ? '#fff' : '#9a4759'} size={20} />
               <Text style={[
                 styles.deliveryOptionText,
                 deliveryType === 'pickup' && styles.deliveryOptionTextActive
@@ -160,13 +141,21 @@ export default function CartScreen() {
               ]}
               onPress={() => setDeliveryType('delivery')}
             >
-              <Truck color={deliveryType === 'delivery' ? '#fff' : '#FF6B6B'} size={20} />
+              <Truck color={deliveryType === 'delivery' ? '#fff' : '#9a4759'} size={20} />
               <Text style={[
                 styles.deliveryOptionText,
                 deliveryType === 'delivery' && styles.deliveryOptionTextActive
               ]}>Доставка</Text>
             </TouchableOpacity>
           </View>
+          
+          {deliveryType === 'pickup' && (
+            <View style={styles.pickupInfo}>
+              <Text style={styles.pickupText}>Адрес: {restaurant.address}</Text>
+              <Text style={styles.pickupText}>Время работы: {restaurant.workingHours}</Text>
+              <Text style={styles.pickupText}>Телефон: {restaurant.phone}</Text>
+            </View>
+          )}
           
           {deliveryType === 'delivery' && (
             <TextInput
@@ -189,16 +178,42 @@ export default function CartScreen() {
               style={styles.quantityButton}
               onPress={() => setUtensilsCount(Math.max(0, utensilsCount - 1))}
             >
-              <Minus color="#FF6B6B" size={16} />
+              <Minus color="#9a4759" size={16} />
             </TouchableOpacity>
             <Text style={styles.quantity}>{utensilsCount}</Text>
             <TouchableOpacity
               style={styles.quantityButton}
               onPress={() => setUtensilsCount(utensilsCount + 1)}
             >
-              <Plus color="#FF6B6B" size={16} />
+              <Plus color="#9a4759" size={16} />
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.timeSection}>
+          <View style={styles.timeHeader}>
+            <Clock color="#333" size={20} />
+            <Text style={styles.sectionTitle}>Время {deliveryType === 'pickup' ? 'самовывоза' : 'доставки'}</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeOptions}>
+            {getDeliveryTimes().map((time, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.timeOption,
+                  deliveryTime === time && styles.timeOptionActive
+                ]}
+                onPress={() => setDeliveryTime(time)}
+              >
+                <Text style={[
+                  styles.timeOptionText,
+                  deliveryTime === time && styles.timeOptionTextActive
+                ]}>
+                  {time}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </ScrollView>
 
@@ -328,7 +343,7 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontSize: 14,
-    color: '#FF6B6B',
+    color: '#9a4759',
     fontWeight: '600' as const,
     marginBottom: 8,
   },
@@ -387,19 +402,30 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#FF6B6B',
+    borderColor: '#9a4759',
     gap: 8,
   },
   deliveryOptionActive: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
   },
   deliveryOptionText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   deliveryOptionTextActive: {
     color: '#fff',
+  },
+  pickupInfo: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  pickupText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
   },
   addressInput: {
     marginTop: 16,
@@ -431,6 +457,48 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
+  timeSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  timeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  timeOptions: {
+    flexDirection: 'row',
+  },
+  timeOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#9a4759',
+    marginRight: 8,
+  },
+  timeOptionActive: {
+    backgroundColor: '#9a4759',
+  },
+  timeOptionText: {
+    fontSize: 14,
+    color: '#9a4759',
+    fontWeight: '600' as const,
+  },
+  timeOptionTextActive: {
+    color: '#fff',
+  },
   footer: {
     backgroundColor: '#fff',
     padding: 20,
@@ -451,10 +519,10 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 24,
     fontWeight: 'bold' as const,
-    color: '#FF6B6B',
+    color: '#9a4759',
   },
   checkoutButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
@@ -481,60 +549,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 40,
-  },
-  recommendedSection: {
-    width: '100%',
-  },
-  recommendedTitle: {
-    fontSize: 20,
-    fontWeight: 'bold' as const,
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'center' as const,
-  },
-  recommendedCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  recommendedImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    marginRight: 16,
-  },
-  recommendedInfo: {
-    flex: 1,
-  },
-  recommendedName: {
-    fontSize: 16,
-    fontWeight: 'bold' as const,
-    color: '#333',
-    marginBottom: 4,
-  },
-  recommendedPrice: {
-    fontSize: 14,
-    color: '#FF6B6B',
-    fontWeight: '600' as const,
-  },
-  recommendedAddButton: {
-    backgroundColor: '#FF6B6B',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -585,7 +599,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#FF6B6B',
+    backgroundColor: '#9a4759',
     alignItems: 'center',
   },
   modalButtonConfirmText: {

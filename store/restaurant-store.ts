@@ -41,7 +41,7 @@ const storage = {
 };
 
 export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
-  const [dishes] = useState<Dish[]>(MOCK_DISHES);
+  const [dishes, setDishes] = useState<Dish[]>(MOCK_DISHES);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -203,6 +203,14 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     console.log('Delete dish:', dishId);
   }, []);
 
+  const toggleDishVisibility = useCallback((dishId: string) => {
+    setDishes(prevDishes => 
+      prevDishes.map(dish => 
+        dish.id === dishId ? { ...dish, available: !dish.available } : dish
+      )
+    );
+  }, []);
+
   return {
     dishes,
     cart,
@@ -223,5 +231,6 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     addDish,
     updateDish,
     deleteDish,
+    toggleDishVisibility,
   };
 });
