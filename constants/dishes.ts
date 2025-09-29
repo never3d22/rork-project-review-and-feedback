@@ -1,0 +1,110 @@
+import { Dish, Category } from '@/types/restaurant';
+
+export const CATEGORIES = [
+  'Салаты',
+  'Супы', 
+  'Горячие блюда',
+  'Десерты',
+  'Напитки'
+];
+
+export const MOCK_CATEGORIES: Category[] = [
+  { id: '1', name: 'Салаты', order: 1 },
+  { id: '2', name: 'Супы', order: 2 },
+  { id: '3', name: 'Горячие блюда', order: 3 },
+  { id: '4', name: 'Десерты', order: 4 },
+  { id: '5', name: 'Напитки', order: 5 },
+];
+
+export const MOCK_DISHES: Dish[] = [
+  {
+    id: '1',
+    name: 'Цезарь с курицей',
+    description: 'Классический салат с курицей, пармезаном и соусом цезарь',
+    price: 450,
+    image: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=400',
+    category: 'Салаты',
+    available: true,
+  },
+  {
+    id: '2',
+    name: 'Греческий салат',
+    description: 'Свежие овощи, фета, оливки и оливковое масло',
+    price: 380,
+    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400',
+    category: 'Салаты',
+    available: true,
+  },
+  {
+    id: '3',
+    name: 'Борщ украинский',
+    description: 'Традиционный борщ со сметаной и зеленью',
+    price: 320,
+    image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+    category: 'Супы',
+    available: true,
+  },
+  {
+    id: '4',
+    name: 'Солянка мясная',
+    description: 'Сытный суп с мясом, колбасой и солеными огурцами',
+    price: 380,
+    image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=400',
+    category: 'Супы',
+    available: true,
+  },
+  {
+    id: '5',
+    name: 'Стейк из говядины',
+    description: 'Сочный стейк средней прожарки с гарниром',
+    price: 890,
+    image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400',
+    category: 'Горячие блюда',
+    available: true,
+  },
+  {
+    id: '6',
+    name: 'Паста карбонара',
+    description: 'Классическая итальянская паста с беконом и сыром',
+    price: 520,
+    image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400',
+    category: 'Горячие блюда',
+    available: true,
+  },
+  {
+    id: '7',
+    name: 'Тирамису',
+    description: 'Нежный итальянский десерт с кофе и маскарпоне',
+    price: 280,
+    image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400',
+    category: 'Десерты',
+    available: true,
+  },
+  {
+    id: '8',
+    name: 'Чизкейк нью-йорк',
+    description: 'Классический американский чизкейк с ягодами',
+    price: 320,
+    image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400',
+    category: 'Десерты',
+    available: true,
+  },
+  {
+    id: '9',
+    name: 'Кофе американо',
+    description: 'Классический черный кофе',
+    price: 150,
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400',
+    category: 'Напитки',
+    available: true,
+  },
+  {
+    id: '10',
+    name: 'Капучино',
+    description: 'Кофе с молочной пенкой',
+    price: 180,
+    image: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400',
+    category: 'Напитки',
+    available: true,
+  },
+];
