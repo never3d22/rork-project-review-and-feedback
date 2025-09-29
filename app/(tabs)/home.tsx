@@ -181,25 +181,26 @@ export default function MenuScreen() {
       )}
 
       <View style={styles.categoriesContainer}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedCategory === 'Все' && styles.filterButtonActive
+          ]}
+          onPress={() => setShowCategoryModal(true)}
+          activeOpacity={0.8}
+        >
+          <Text style={[
+            styles.filterButtonText,
+            selectedCategory === 'Все' && styles.filterButtonTextActive
+          ]}>Фильтр</Text>
+        </TouchableOpacity>
+        
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesScrollContent}
+          style={styles.categoriesScroll}
         >
-          <TouchableOpacity
-            style={[
-              styles.categoryButton,
-              selectedCategory === 'Все' && styles.categoryButtonActive
-            ]}
-            onPress={() => setShowCategoryModal(true)}
-            activeOpacity={0.8}
-          >
-            <Text style={[
-              styles.categoryButtonText,
-              selectedCategory === 'Все' && styles.categoryButtonTextActive
-            ]}>Фильтр</Text>
-          </TouchableOpacity>
-          
           {CATEGORIES.map(category => (
             <TouchableOpacity
               key={category}
@@ -523,13 +524,49 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  filterButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1.5,
+    borderColor: '#e8eaed',
+    marginLeft: 20,
+    marginRight: 12,
+  },
+  filterButtonActive: {
+    backgroundColor: '#9a4759',
+    borderColor: '#9a4759',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500' as const,
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+    fontWeight: '600' as const,
+  },
+  categoriesScroll: {
+    flex: 1,
   },
   categoriesScrollContent: {
-    paddingHorizontal: 20,
+    paddingRight: 20,
     gap: 12,
   },
   categoryButton: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
     backgroundColor: '#f8f9fa',

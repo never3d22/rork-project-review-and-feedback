@@ -229,12 +229,20 @@ export default function AdminScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               {orders.length > 0 ? (
                 orders.map(order => (
-                  <View key={order.id} style={styles.orderCard}>
+                  <TouchableOpacity 
+                    key={order.id} 
+                    style={styles.orderCard}
+                    onPress={() => handleViewOrder(order)}
+                    activeOpacity={0.9}
+                  >
                     <View style={styles.orderHeader}>
                       <Text style={styles.orderId}>Заказ #{order.id}</Text>
                       <TouchableOpacity
                         style={styles.viewButton}
-                        onPress={() => handleViewOrder(order)}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleViewOrder(order);
+                        }}
                       >
                         <Eye color="#9a4759" size={16} />
                       </TouchableOpacity>
@@ -254,7 +262,10 @@ export default function AdminScreen() {
                         {order.status === 'pending' && (
                           <TouchableOpacity
                             style={styles.statusButton}
-                            onPress={() => updateOrderStatus(order.id, 'preparing')}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus(order.id, 'preparing');
+                            }}
                           >
                             <Text style={styles.statusButtonText}>Принять</Text>
                           </TouchableOpacity>
@@ -262,7 +273,10 @@ export default function AdminScreen() {
                         {order.status === 'preparing' && (
                           <TouchableOpacity
                             style={styles.statusButton}
-                            onPress={() => updateOrderStatus(order.id, 'ready')}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus(order.id, 'ready');
+                            }}
                           >
                             <Text style={styles.statusButtonText}>Готов</Text>
                           </TouchableOpacity>
@@ -270,14 +284,17 @@ export default function AdminScreen() {
                         {order.status === 'ready' && (
                           <TouchableOpacity
                             style={styles.statusButton}
-                            onPress={() => updateOrderStatus(order.id, 'delivered')}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus(order.id, 'delivered');
+                            }}
                           >
                             <Text style={styles.statusButtonText}>Выдан</Text>
                           </TouchableOpacity>
                         )}
                       </View>
                     )}
-                  </View>
+                  </TouchableOpacity>
                 ))
               ) : (
                 <Text style={styles.emptyText}>Нет заказов</Text>
@@ -642,6 +659,44 @@ export default function AdminScreen() {
                       Создан: {new Date(selectedOrder.createdAt).toLocaleString('ru-RU')}
                     </Text>
                   </View>
+                  
+                  {selectedOrder.status !== 'delivered' && (
+                    <View style={styles.orderDetailActions}>
+                      {selectedOrder.status === 'pending' && (
+                        <TouchableOpacity
+                          style={styles.detailStatusButton}
+                          onPress={() => {
+                            updateOrderStatus(selectedOrder.id, 'preparing');
+                            setShowOrderModal(false);
+                          }}
+                        >
+                          <Text style={styles.detailStatusButtonText}>Принять заказ</Text>
+                        </TouchableOpacity>
+                      )}
+                      {selectedOrder.status === 'preparing' && (
+                        <TouchableOpacity
+                          style={styles.detailStatusButton}
+                          onPress={() => {
+                            updateOrderStatus(selectedOrder.id, 'ready');
+                            setShowOrderModal(false);
+                          }}
+                        >
+                          <Text style={styles.detailStatusButtonText}>Заказ готов</Text>
+                        </TouchableOpacity>
+                      )}
+                      {selectedOrder.status === 'ready' && (
+                        <TouchableOpacity
+                          style={styles.detailStatusButton}
+                          onPress={() => {
+                            updateOrderStatus(selectedOrder.id, 'delivered');
+                            setShowOrderModal(false);
+                          }}
+                        >
+                          <Text style={styles.detailStatusButtonText}>Заказ выдан</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
                 </ScrollView>
               </>
             )}
@@ -1269,5 +1324,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 4,
+  },
+  orderDetailActions: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  detailStatusButton: {
+    backgroundColor: '#9a4759',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  detailStatusButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
 });

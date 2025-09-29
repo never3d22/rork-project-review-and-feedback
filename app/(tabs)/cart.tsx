@@ -141,6 +141,7 @@ export default function CartScreen() {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [errorMessage, setErrorMessage] = useState('');
   const insets = useSafeAreaInsets();
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
@@ -218,11 +219,12 @@ export default function CartScreen() {
         setShowPhoneModal(false);
         setShowVerifyModal(true);
         setTimeLeft(60);
+        setErrorMessage('');
       } else {
-        alert('Не удалось отправить код. Попробуйте еще раз.');
+        setErrorMessage('Не удалось отправить код. Попробуйте еще раз.');
       }
     } catch {
-      alert('Произошла ошибка при отправке кода');
+      setErrorMessage('Произошла ошибка при отправке кода');
     } finally {
       setIsLoading(false);
     }
@@ -246,13 +248,18 @@ export default function CartScreen() {
         setShowVerifyModal(false);
         setAuthPhone('');
         setVerificationCode(['', '', '', '', '', '']);
+        setErrorMessage('');
         handleCheckout();
       } else {
-        alert('Неправильный код. Попробуйте еще раз.');
+        setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
+        // Фокусируемся на первое поле при ошибке
+        setTimeout(() => {
+          codeInputRefs.current[0]?.focus();
+        }, 100);
       }
     } catch {
-      alert('Произошла ошибка при проверке кода');
+      setErrorMessage('Произошла ошибка при проверке кода');
     } finally {
       setIsLoading(false);
     }
@@ -295,9 +302,9 @@ export default function CartScreen() {
     try {
       await sendSMSCode(cleanPhone);
       setTimeLeft(60);
-      alert('Код отправлен повторно');
+      setErrorMessage('Код отправлен повторно');
     } catch {
-      alert('Не удалось отправить код повторно');
+      setErrorMessage('Не удалось отправить код повторно');
     }
   };
 
@@ -653,6 +660,10 @@ export default function CartScreen() {
             <Text style={styles.modalTitle}>Вход для оформления заказа</Text>
             <Text style={styles.modalSubtitle}>Введите номер телефона для получения SMS-кода</Text>
             
+            {errorMessage ? (
+              <Text style={styles.errorMessage}>{errorMessage}</Text>
+            ) : null}
+            
             <TextInput
               style={styles.input}
               placeholder="+7 (999) 123-45-67"
@@ -702,6 +713,10 @@ export default function CartScreen() {
             <Text style={styles.modalSubtitle}>
               Введите код из SMS, отправленный на номер {authPhone}
             </Text>
+            
+            {errorMessage ? (
+              <Text style={styles.errorMessage}>{errorMessage}</Text>
+            ) : null}
             
             <View style={styles.codeContainer}>
               {verificationCode.map((digit, index) => (
@@ -1439,5 +1454,13 @@ const styles = StyleSheet.create({
   },
   modalButtonTextDisabled: {
     color: '#999',
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#ff4444',
+    textAlign: 'center' as const,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    lineHeight: 18,
   },
 });

@@ -50,6 +50,7 @@ export default function ProfileScreen() {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [errorMessage, setErrorMessage] = useState('');
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
@@ -92,11 +93,12 @@ export default function ProfileScreen() {
         setShowPhoneModal(false);
         setShowVerifyModal(true);
         setTimeLeft(60);
+        setErrorMessage('');
       } else {
-        Alert.alert('Ошибка', 'Не удалось отправить код. Попробуйте еще раз.');
+        setErrorMessage('Не удалось отправить код. Попробуйте еще раз.');
       }
     } catch {
-      Alert.alert('Ошибка', 'Произошла ошибка при отправке кода');
+      setErrorMessage('Произошла ошибка при отправке кода');
     } finally {
       setIsLoading(false);
     }
@@ -120,12 +122,17 @@ export default function ProfileScreen() {
         setShowVerifyModal(false);
         setAuthPhone('');
         setVerificationCode(['', '', '', '', '', '']);
+        setErrorMessage('');
       } else {
-        Alert.alert('Ошибка', 'Неправильный код. Попробуйте еще раз.');
+        setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
+        // Фокусируемся на первое поле при ошибке
+        setTimeout(() => {
+          codeInputRefs.current[0]?.focus();
+        }, 100);
       }
     } catch {
-      Alert.alert('Ошибка', 'Произошла ошибка при проверке кода');
+      setErrorMessage('Произошла ошибка при проверке кода');
     } finally {
       setIsLoading(false);
     }
@@ -184,9 +191,9 @@ export default function ProfileScreen() {
     try {
       await sendSMSCode(cleanPhone);
       setTimeLeft(60);
-      Alert.alert('Успешно', 'Код отправлен повторно');
+      setErrorMessage('Код отправлен повторно');
     } catch {
-      Alert.alert('Ошибка', 'Не удалось отправить код повторно');
+      setErrorMessage('Не удалось отправить код повторно');
     }
   };
 
@@ -305,6 +312,10 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Вход в аккаунт</Text>
               <Text style={styles.modalSubtitle}>Введите номер телефона для получения SMS-кода</Text>
               
+              {errorMessage ? (
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
+              ) : null}
+              
               <TextInput
                 style={styles.input}
                 placeholder="+7 (999) 123-45-67"
@@ -354,6 +365,10 @@ export default function ProfileScreen() {
               <Text style={styles.modalSubtitle}>
                 Введите код из SMS, отправленный на номер {authPhone}
               </Text>
+              
+              {errorMessage ? (
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
+              ) : null}
               
               <View style={styles.codeContainer}>
                 {verificationCode.map((digit, index) => (
@@ -1181,5 +1196,13 @@ const styles = StyleSheet.create({
   },
   modalButtonTextDisabled: {
     color: '#999',
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#ff4444',
+    textAlign: 'center' as const,
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    lineHeight: 18,
   },
 });
