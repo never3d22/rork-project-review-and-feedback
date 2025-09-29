@@ -29,6 +29,20 @@ function RootLayoutNav() {
           presentation: "modal"
         }} 
       />
+      <Stack.Screen 
+        name="auth/phone" 
+        options={{ 
+          title: "Вход в аккаунт",
+          presentation: "modal"
+        }} 
+      />
+      <Stack.Screen 
+        name="auth/verify" 
+        options={{ 
+          title: "Подтверждение",
+          presentation: "modal"
+        }} 
+      />
     </Stack>
   );
 }

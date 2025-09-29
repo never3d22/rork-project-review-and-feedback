@@ -22,7 +22,7 @@ import { useRestaurant } from '@/store/restaurant-store';
 type PaymentMethod = 'card' | 'cash' | 'online';
 
 export default function CheckoutScreen() {
-  const { cart, getCartTotal, createOrder } = useRestaurant();
+  const { cart, getCartTotal, createOrder, user } = useRestaurant();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const needUtensils = true;
   const [comments, setComments] = useState('');
@@ -42,13 +42,20 @@ export default function CheckoutScreen() {
       return;
     }
 
+    // Проверяем аутентификацию пользователя
+    if (!user) {
+      router.push('/auth/phone' as any);
+      return;
+    }
+
     try {
       const newOrderId = createOrder({
         items: cart,
         total: getCartTotal(),
         utensils: needUtensils,
+        utensilsCount: needUtensils ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0,
         paymentMethod,
-        deliveryType: 'pickup', // This would come from cart screen
+        deliveryType: 'pickup',
         comments,
       });
       

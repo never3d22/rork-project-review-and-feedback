@@ -46,6 +46,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
+  const [pendingSMSCodes, setPendingSMSCodes] = useState<Map<string, { code: string; timestamp: number }>>(new Map());
   const [restaurant, setRestaurant] = useState<Restaurant>({
     id: '1',
     name: 'Вкусная еда',
@@ -254,6 +255,78 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     setCategories(prevCategories => prevCategories.filter(category => category.id !== categoryId));
   }, []);
 
+  const sendSMSCode = useCallback(async (phone: string): Promise<boolean> => {
+    try {
+      // Генерируем 6-значный код
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Сохраняем код с временной меткой (действителен 5 минут)
+      const newCodes = new Map(pendingSMSCodes);
+      newCodes.set(phone, {
+        code,
+        timestamp: Date.now() + 5 * 60 * 1000 // 5 минут
+      });
+      setPendingSMSCodes(newCodes);
+      
+      // В реальном приложении здесь был бы вызов SMS API
+      console.log(`SMS код для ${phone}: ${code}`);
+      
+      return true;
+    } catch (error) {
+      console.error('Ошибка отправки SMS:', error);
+      return false;
+    }
+  }, [pendingSMSCodes]);
+
+  const verifySMSCode = useCallback(async (phone: string, inputCode: string): Promise<boolean> => {
+    try {
+      const storedData = pendingSMSCodes.get(phone);
+      
+      if (!storedData) {
+        console.log('Код не найден для номера:', phone);
+        return false;
+      }
+      
+      // Проверяем, не истек ли код
+      if (Date.now() > storedData.timestamp) {
+        console.log('Код истек для номера:', phone);
+        // Удаляем истекший код
+        const newCodes = new Map(pendingSMSCodes);
+        newCodes.delete(phone);
+        setPendingSMSCodes(newCodes);
+        return false;
+      }
+      
+      // Проверяем код
+      if (storedData.code === inputCode) {
+        // Код верный, создаем пользователя
+        const newUser: User = {
+          id: Date.now().toString(),
+          name: 'Пользователь',
+          email: phone,
+          phone: phone,
+          isAdmin: false,
+          addresses: [],
+        };
+        
+        setUser(newUser);
+        
+        // Удаляем использованный код
+        const newCodes = new Map(pendingSMSCodes);
+        newCodes.delete(phone);
+        setPendingSMSCodes(newCodes);
+        
+        return true;
+      }
+      
+      console.log('Неверный код для номера:', phone);
+      return false;
+    } catch (error) {
+      console.error('Ошибка проверки SMS кода:', error);
+      return false;
+    }
+  }, [pendingSMSCodes]);
+
   return {
     dishes,
     cart,
@@ -280,5 +353,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     addCategory,
     updateCategory,
     deleteCategory,
+    sendSMSCode,
+    verifySMSCode,
   };
 });
