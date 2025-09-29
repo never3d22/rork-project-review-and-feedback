@@ -327,22 +327,24 @@ export default function CartScreen() {
         {getRecommendedDishes().length > 0 && (
           <View style={styles.recommendationsSection}>
             <Text style={styles.sectionTitle}>Добавить ещё</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.verticalCarousel}>
               {getRecommendedDishes().map(dish => (
                 <TouchableOpacity
                   key={dish.id}
-                  style={styles.recommendedDish}
+                  style={styles.recommendedDishVertical}
                   onPress={() => addToCart(dish)}
                 >
-                  <Image source={{ uri: dish.image }} style={styles.recommendedImage} />
-                  <Text style={styles.recommendedName} numberOfLines={2}>{dish.name}</Text>
-                  <Text style={styles.recommendedPrice}>{dish.price} ₽</Text>
-                  <View style={styles.addRecommendedButton}>
+                  <Image source={{ uri: dish.image }} style={styles.recommendedImageVertical} />
+                  <View style={styles.recommendedInfoVertical}>
+                    <Text style={styles.recommendedNameVertical} numberOfLines={2}>{dish.name}</Text>
+                    <Text style={styles.recommendedPriceVertical}>{dish.price} ₽</Text>
+                  </View>
+                  <View style={styles.addRecommendedButtonVertical}>
                     <Plus color="#fff" size={16} />
                   </View>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
@@ -763,9 +765,9 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   removeButton: {
-    padding: 2,
-    width: 20,
-    height: 20,
+    padding: 4,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -812,6 +814,44 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verticalCarousel: {
+    gap: 12,
+  },
+  recommendedDishVertical: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    gap: 12,
+  },
+  recommendedImageVertical: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+  },
+  recommendedInfoVertical: {
+    flex: 1,
+  },
+  recommendedNameVertical: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginBottom: 4,
+  },
+  recommendedPriceVertical: {
+    fontSize: 14,
+    fontWeight: 'bold' as const,
+    color: '#9a4759',
+  },
+  addRecommendedButtonVertical: {
+    backgroundColor: '#9a4759',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },

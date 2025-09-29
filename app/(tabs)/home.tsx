@@ -150,12 +150,12 @@ export default function MenuScreen() {
               styles.categoryButton,
               selectedCategory === 'Все' && styles.categoryButtonActive
             ]}
-            onPress={() => setSelectedCategory('Все')}
+            onPress={() => setShowCategoryModal(true)}
           >
             <Text style={[
               styles.categoryButtonText,
               selectedCategory === 'Все' && styles.categoryButtonTextActive
-            ]}>Все</Text>
+            ]}>Фильтр</Text>
           </TouchableOpacity>
           
           {CATEGORIES.map(category => (

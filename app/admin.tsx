@@ -19,6 +19,7 @@ import {
   Save,
   X,
   Eye,
+  EyeOff,
 } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CATEGORIES, MOCK_CATEGORIES } from '@/constants/dishes';
@@ -199,6 +200,16 @@ export default function AdminScreen() {
                           </TouchableOpacity>
                         </View>
                         <View style={styles.dishActions}>
+                          <TouchableOpacity
+                            style={styles.hideButton}
+                            onPress={() => toggleDishVisibility(dish.id)}
+                          >
+                            {dish.available ? (
+                              <EyeOff color="#ff9800" size={16} />
+                            ) : (
+                              <Eye color="#4CAF50" size={16} />
+                            )}
+                          </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.editButton}
                             onPress={() => handleEditDish(dish)}
@@ -927,6 +938,9 @@ const styles = StyleSheet.create({
   dishActions: {
     flexDirection: 'row',
     gap: 8,
+  },
+  hideButton: {
+    padding: 8,
   },
   editButton: {
     padding: 8,
