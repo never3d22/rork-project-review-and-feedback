@@ -19,7 +19,7 @@ import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function MenuScreen() {
-  const { dishes, addToCart, restaurant, user, toggleDishVisibility } = useRestaurant();
+  const { dishes, addToCart, restaurant, user, toggleDishVisibility, orders } = useRestaurant();
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState<boolean>(false);
@@ -52,6 +52,27 @@ export default function MenuScreen() {
   const handleGoToCart = () => {
     setShowDishModal(false);
     router.push('/(tabs)/cart');
+  };
+
+  // Get user's current active order
+  const currentOrder = user && !user.isAdmin ? orders.find(order => order.status !== 'delivered') : null;
+  
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return '#FFA500';
+      case 'preparing': return '#2196F3';
+      case 'ready': return '#4CAF50';
+      default: return '#999';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Ожидает подтверждения';
+      case 'preparing': return 'Готовится';
+      case 'ready': return 'Готов к выдаче';
+      default: return status;
+    }
   };
 
   const panResponder = PanResponder.create({
@@ -139,6 +160,24 @@ export default function MenuScreen() {
         </LinearGradient>
       </Animated.View>
 
+      {/* Order Status Block */}
+      {currentOrder && (
+        <TouchableOpacity 
+          style={styles.orderStatusBlock}
+          onPress={() => router.push('/(tabs)/profile')}
+        >
+          <View style={styles.orderStatusContent}>
+            <View style={styles.orderStatusLeft}>
+              <Text style={styles.orderStatusTitle}>Заказ #{currentOrder.id}</Text>
+              <Text style={styles.orderStatusSubtitle}>{currentOrder.total} ₽</Text>
+            </View>
+            <View style={[styles.orderStatusBadge, { backgroundColor: getStatusColor(currentOrder.status) }]}>
+              <Text style={styles.orderStatusBadgeText}>{getStatusText(currentOrder.status)}</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      )}
+
       <View style={styles.categoriesContainer}>
         <ScrollView 
           horizontal 
@@ -198,7 +237,9 @@ export default function MenuScreen() {
           return (
             <View key={category} style={styles.categorySection}>
               <Text style={styles.categoryTitle}>{category}</Text>
-              {categoryDishes.map(renderDishCard)}
+              <View style={styles.dishesGrid}>
+                {categoryDishes.map(renderDishCard)}
+              </View>
             </View>
           );
         })}
@@ -386,6 +427,12 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
   },
+  dishesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   dishCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -399,26 +446,27 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     overflow: 'hidden',
+    width: '48%',
   },
   dishImage: {
     width: '100%',
-    height: 200,
+    height: 140,
     resizeMode: 'cover' as const,
   },
   dishInfo: {
-    padding: 16,
+    padding: 12,
   },
   dishName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#333',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   dishDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
-    lineHeight: 20,
-    marginBottom: 12,
+    lineHeight: 16,
+    marginBottom: 10,
   },
   dishFooter: {
     flexDirection: 'row',
@@ -426,15 +474,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dishPrice: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#9a4759',
   },
   addButton: {
     backgroundColor: '#9a4759',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -641,5 +689,48 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 16,
     fontWeight: '600' as const,
+  },
+  orderStatusBlock: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  orderStatusContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  orderStatusLeft: {
+    flex: 1,
+  },
+  orderStatusTitle: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 4,
+  },
+  orderStatusSubtitle: {
+    fontSize: 14,
+    color: '#666',
+  },
+  orderStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  orderStatusBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
 });

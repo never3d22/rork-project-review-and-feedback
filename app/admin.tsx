@@ -187,17 +187,7 @@ export default function AdminScreen() {
                         <View style={styles.dishInfo}>
                           <Text style={styles.dishName}>{dish.name}</Text>
                           <Text style={styles.dishPrice}>{dish.price} ₽</Text>
-                          <TouchableOpacity
-                            style={[
-                              styles.statusToggle,
-                              { backgroundColor: dish.available ? '#4CAF50' : '#ff4444' }
-                            ]}
-                            onPress={() => toggleDishVisibility(dish.id)}
-                          >
-                            <Text style={styles.statusToggleText}>
-                              {dish.available ? 'Скрыть' : 'Показать'}
-                            </Text>
-                          </TouchableOpacity>
+
                         </View>
                         <View style={styles.dishActions}>
                           <TouchableOpacity
