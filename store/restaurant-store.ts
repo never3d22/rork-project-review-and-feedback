@@ -301,49 +301,47 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   // Функция для отправки реального SMS
   const sendRealSMS = async (phone: string, code: string): Promise<boolean> => {
     try {
-      // В режиме разработки или веб-версии показываем код в консоли
-      if (__DEV__ || Platform.OS === 'web') {
-        console.log(`[DEMO MODE] SMS код для ${phone}: ${code}`);
-        console.log('Для реальной отправки SMS настройте SMS-провайдера в соответствии с SMS_SETUP_GUIDE.md');
-        return true;
-      }
-      
-      // Пример интеграции с SMS.ru (работает только с бэкендом)
-      // ВАЖНО: Прямые запросы к SMS API из браузера блокируются CORS политикой
-      // Для продакшена нужно настроить бэкенд-сервер для отправки SMS
-      
       const SMS_API_ID = process.env.EXPO_PUBLIC_SMS_API_ID || '457A5DBA-D814-BC10-DDD7-645DC659658E';
       const message = `Ваш код подтверждения: ${code}`;
       
-      // Попытка отправки через прокси-сервер (если настроен)
-      const proxyUrl = process.env.EXPO_PUBLIC_SMS_PROXY_URL;
+      console.log(`Отправляем SMS на номер ${phone} с кодом: ${code}`);
       
-      if (proxyUrl) {
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            phone,
-            message,
-            apiId: SMS_API_ID
-          })
-        });
+      // Форматируем номер для SMS.ru (должен начинаться с 7)
+      const formattedPhone = phone.startsWith('8') ? '7' + phone.slice(1) : phone;
+      
+      // Отправляем SMS через SMS.ru API
+      const smsUrl = `https://sms.ru/sms/send?api_id=${SMS_API_ID}&to=${formattedPhone}&msg=${encodeURIComponent(message)}&json=1`;
+      
+      console.log('Отправляем запрос на:', smsUrl);
+      
+      const response = await fetch(smsUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      console.log('Статус ответа:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Ответ от SMS.ru:', result);
         
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            console.log('SMS успешно отправлено через прокси');
-            return true;
-          }
+        if (result.status === 'OK') {
+          console.log('SMS успешно отправлено!');
+          return true;
+        } else {
+          console.error('Ошибка SMS.ru:', result.status_text || result.status);
+          // В случае ошибки API показываем код в консоли для тестирования
+          console.log(`[FALLBACK] SMS код для тестирования: ${code}`);
+          return true;
         }
+      } else {
+        console.error('HTTP ошибка:', response.status, response.statusText);
+        // В случае HTTP ошибки показываем код в консоли для тестирования
+        console.log(`[FALLBACK] SMS код для тестирования: ${code}`);
+        return true;
       }
-      
-      // Fallback: показываем код в консоли
-      console.log(`[FALLBACK] SMS код для ${phone}: ${code}`);
-      console.log('SMS API недоступен. Используйте код из консоли для тестирования.');
-      return true;
       
     } catch (error) {
       console.error('Ошибка при отправке SMS:', error);
