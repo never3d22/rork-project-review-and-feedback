@@ -68,7 +68,7 @@ export default function MenuScreen() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return 'Ожидает подтверждения';
+      case 'pending': return 'В обработке';
       case 'preparing': return 'Готовится';
       case 'ready': return 'Готов к выдаче';
       default: return status;
