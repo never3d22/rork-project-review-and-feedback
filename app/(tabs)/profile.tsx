@@ -458,6 +458,16 @@ export default function ProfileScreen() {
                         Время: {selectedOrder.deliveryTime}
                       </Text>
                     )}
+                    {selectedOrder.paymentMethod && (
+                      <Text style={styles.orderSummaryText}>
+                        Оплата: {selectedOrder.paymentMethod === 'card' ? 'Банковская карта' : selectedOrder.paymentMethod === 'cash' ? 'Наличные' : 'Онлайн оплата'}
+                      </Text>
+                    )}
+                    {selectedOrder.utensilsCount !== undefined && (
+                      <Text style={styles.orderSummaryText}>
+                        Приборы: {selectedOrder.utensilsCount} шт.
+                      </Text>
+                    )}
                     {selectedOrder.comments && (
                       <Text style={styles.orderSummaryText}>
                         Комментарий: {selectedOrder.comments}

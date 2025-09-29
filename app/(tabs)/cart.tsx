@@ -125,9 +125,10 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
 }
 
 export default function CartScreen() {
-  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder } = useRestaurant();
+  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, loginAsUser } = useRestaurant();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [utensilsCount, setUtensilsCount] = useState(1);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
@@ -136,6 +137,8 @@ export default function CartScreen() {
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [comments, setComments] = useState('');
+  const [userPhone, setUserPhone] = useState('');
+  const [userPassword, setUserPassword] = useState('');
   const insets = useSafeAreaInsets();
 
   const getRecommendedDishes = () => {
@@ -170,8 +173,30 @@ export default function CartScreen() {
     setShowClearModal(false);
   };
 
+  const handleLogin = () => {
+    if (!userPhone.trim() || !userPassword.trim()) {
+      alert('Заполните все поля');
+      return;
+    }
+    const success = loginAsUser(userPhone, userPassword);
+    if (success) {
+      setShowAuthModal(false);
+      setUserPhone('');
+      setUserPassword('');
+      handleCheckout();
+    } else {
+      alert('Неверные данные');
+    }
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    
+    // Проверяем, авторизован ли пользователь
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     
     if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
       alert('Пожалуйста, укажите адрес доставки');
@@ -504,6 +529,51 @@ export default function CartScreen() {
         </View>
       </Modal>
 
+      {/* Authentication Modal */}
+      <Modal
+        visible={showAuthModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAuthModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Войдите для оформления заказа</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Номер телефона"
+              value={userPhone}
+              onChangeText={setUserPhone}
+              keyboardType="phone-pad"
+            />
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Пароль"
+              value={userPassword}
+              onChangeText={setUserPassword}
+              secureTextEntry
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowAuthModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={handleLogin}
+              >
+                <Text style={styles.modalButtonConfirmText}>Войти</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal
         visible={showSuccessModal}
         transparent
@@ -765,9 +835,9 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   removeButton: {
-    padding: 2,
-    width: 20,
-    height: 20,
+    padding: 4,
+    width: 24,
+    height: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1086,5 +1156,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600' as const,
     marginTop: 4,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 16,
   },
 });
