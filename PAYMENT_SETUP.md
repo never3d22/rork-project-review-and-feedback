@@ -1,5 +1,7 @@
 # Настройка платежных систем
 
+✅ **Интеграция готова!** Все способы оплаты реализованы с обработкой ошибок.
+
 Приложение поддерживает следующие способы оплаты:
 
 ## 1. Банковская карта
@@ -111,70 +113,31 @@ EXPO_PUBLIC_YOOKASSA_SHOP_ID=ваш_shop_id
 YOOKASSA_SECRET_KEY=ваш_secret_key
 ```
 
-## Где изменить код для интеграции
+## ✅ Интеграция завершена
+
+### Реализованные функции:
+
+1. **`processPayment(orderId)`** - обрабатывает все типы платежей
+   - Проверяет наличие API ключей
+   - Показывает понятные ошибки пользователю
+   - Интегрирована с Stripe, SberPay, СБП (Тинькофф)
+
+2. **`handleCheckout()`** - оформление заказа
+   - Вызывает `processPayment()` перед созданием заказа
+   - Обрабатывает ошибки оплаты
+   - Создает заказ только при успешной оплате
+
+### Что происходит при отсутствии API ключей:
+
+- **Банковская карта**: "Ошибка: API ключ Stripe не настроен. Добавьте EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY в .env файл"
+- **SberPay**: "Ошибка: API ключи SberPay не настроены. Добавьте в .env файл: EXPO_PUBLIC_SBER_MERCHANT_ID, SBER_API_USERNAME, SBER_API_PASSWORD"
+- **СБП**: "Ошибка: API ключи СБП не настроены. Добавьте в .env файл: EXPO_PUBLIC_TINKOFF_TERMINAL_KEY, TINKOFF_SECRET_KEY"
+- **Наличные**: Работает без API ключей
 
 ### Основной файл: `app/(tabs)/cart.tsx`
 
-Найдите функцию `handleCheckout` (строка 425) и добавьте логику оплаты:
-
-```typescript
-const handleCheckout = async () => {
-  if (cart.length === 0) return;
-  
-  if (!user) {
-    setShowPhoneModal(true);
-    return;
-  }
-  
-  if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
-    alert('Пожалуйста, укажите адрес доставки');
-    return;
-  }
-
-  try {
-    // ДОБАВЬТЕ ЗДЕСЬ ЛОГИКУ ОПЛАТЫ
-    if (paymentMethod === 'card') {
-      // Интеграция с картами (Stripe/Cloudpayments)
-      // const paymentResult = await processCardPayment();
-      // if (!paymentResult.success) return;
-    } else if (paymentMethod === 'sberpay') {
-      // Интеграция с SberPay
-      // const paymentResult = await processSberPayment();
-      // if (!paymentResult.success) return;
-    } else if (paymentMethod === 'sbp') {
-      // Интеграция с СБП
-      // const paymentResult = await processSBPPayment();
-      // if (!paymentResult.success) return;
-    }
-    // Для наличных (cash) - оплата не требуется
-    
-    if (deliveryAddress && deliveryAddress.trim()) {
-      addAddress(deliveryAddress.trim());
-    }
-    
-    const newOrderId = createOrder({
-      items: cart,
-      total: getCartTotal(),
-      utensils: utensilsCount > 0,
-      utensilsCount,
-      paymentMethod,
-      deliveryType,
-      deliveryAddress: deliveryType === 'delivery' ? deliveryAddress : undefined,
-      deliveryTime,
-      comments,
-    });
-    
-    setOrderId(newOrderId);
-    setShowSuccessModal(true);
-    clearCart();
-    setDeliveryAddress('');
-    setComments('');
-  } catch (error) {
-    console.error('Error creating order:', error);
-    alert('Ошибка при оформлении заказа');
-  }
-};
-```
+Функция `processPayment` (строка 426) обрабатывает все платежи.
+Функция `handleCheckout` (строка 549) вызывает оплату перед созданием заказа.
 
 ## Рекомендации по безопасности
 

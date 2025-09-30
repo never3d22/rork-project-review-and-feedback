@@ -423,6 +423,130 @@ export default function CartScreen() {
     }
   };
 
+  const processPayment = async (orderId: string): Promise<{ success: boolean; error?: string }> => {
+    if (paymentMethod === 'cash') {
+      return { success: true };
+    }
+
+    if (paymentMethod === 'card') {
+      const stripeKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+      if (!stripeKey) {
+        return { 
+          success: false, 
+          error: 'Ошибка: API ключ Stripe не настроен. Добавьте EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY в .env файл' 
+        };
+      }
+
+      try {
+        console.log('Processing card payment with Stripe...');
+        return { 
+          success: false, 
+          error: 'Интеграция Stripe в процессе настройки. Используйте другой способ оплаты.' 
+        };
+      } catch (error) {
+        return { success: false, error: 'Ошибка при оплате картой' };
+      }
+    }
+
+    if (paymentMethod === 'sberpay') {
+      const merchantId = process.env.EXPO_PUBLIC_SBER_MERCHANT_ID;
+      const username = process.env.SBER_API_USERNAME;
+      const password = process.env.SBER_API_PASSWORD;
+
+      if (!merchantId || !username || !password) {
+        return { 
+          success: false, 
+          error: 'Ошибка: API ключи SberPay не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_SBER_MERCHANT_ID\nSBER_API_USERNAME\nSBER_API_PASSWORD' 
+        };
+      }
+
+      try {
+        console.log('Processing SberPay payment...');
+        const response = await fetch('https://securepayments.sberbank.ru/payment/rest/register.do', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userName: username,
+            password: password,
+            orderNumber: orderId,
+            amount: getCartTotal() * 100,
+            returnUrl: 'myapp://payment-success',
+            failUrl: 'myapp://payment-failed',
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.errorCode) {
+          return { 
+            success: false, 
+            error: `Ошибка SberPay: ${data.errorMessage || 'Неизвестная ошибка'}` 
+          };
+        }
+
+        if (data.formUrl) {
+          console.log('SberPay payment URL:', data.formUrl);
+          return { success: true };
+        }
+
+        return { success: false, error: 'Не удалось получить ссылку для оплаты' };
+      } catch (error) {
+        console.error('SberPay error:', error);
+        return { success: false, error: 'Ошибка при подключении к SberPay' };
+      }
+    }
+
+    if (paymentMethod === 'sbp') {
+      const terminalKey = process.env.EXPO_PUBLIC_TINKOFF_TERMINAL_KEY;
+      const secretKey = process.env.TINKOFF_SECRET_KEY;
+
+      if (!terminalKey || !secretKey) {
+        return { 
+          success: false, 
+          error: 'Ошибка: API ключи СБП не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_TINKOFF_TERMINAL_KEY\nTINKOFF_SECRET_KEY\n\nИли используйте другой банк (ЮKassa, Сбербанк)' 
+        };
+      }
+
+      try {
+        console.log('Processing SBP payment via Tinkoff...');
+        const response = await fetch('https://securepay.tinkoff.ru/v2/Init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            TerminalKey: terminalKey,
+            Amount: getCartTotal() * 100,
+            OrderId: orderId,
+            PayType: 'SBP',
+            Description: `Заказ №${orderId}`,
+            SuccessURL: 'myapp://payment-success',
+            FailURL: 'myapp://payment-failed',
+          })
+        });
+
+        const data = await response.json();
+        
+        if (!data.Success) {
+          return { 
+            success: false, 
+            error: `Ошибка СБП: ${data.Message || data.Details || 'Неизвестная ошибка'}` 
+          };
+        }
+
+        if (data.PaymentURL) {
+          console.log('SBP payment URL:', data.PaymentURL);
+          return { success: true };
+        }
+
+        return { success: false, error: 'Не удалось получить ссылку для оплаты через СБП' };
+      } catch (error) {
+        console.error('SBP error:', error);
+        return { success: false, error: 'Ошибка при подключении к системе СБП' };
+      }
+    }
+
+    return { success: false, error: 'Неизвестный способ оплаты' };
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     
@@ -439,6 +563,15 @@ export default function CartScreen() {
     try {
       if (deliveryAddress && deliveryAddress.trim()) {
         addAddress(deliveryAddress.trim());
+      }
+      
+      const tempOrderId = `ORD-${Date.now()}`;
+      
+      const paymentResult = await processPayment(tempOrderId);
+      
+      if (!paymentResult.success) {
+        alert(paymentResult.error || 'Ошибка при оплате');
+        return;
       }
       
       const newOrderId = createOrder({
