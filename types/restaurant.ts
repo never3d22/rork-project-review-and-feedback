@@ -40,6 +40,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  birthday?: string;
   isAdmin: boolean;
   addresses?: string[];
 }

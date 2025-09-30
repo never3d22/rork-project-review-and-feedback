@@ -11,9 +11,11 @@ import {
   PanResponder,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
 import { 
   Minus, 
   Plus, 
@@ -27,7 +29,8 @@ import {
   Banknote, 
   Smartphone, 
   MessageSquare,
-  X 
+  X,
+  Navigation,
 } from 'lucide-react-native';
 import { useRestaurant } from '@/store/restaurant-store';
 import { CartItem } from '@/types/restaurant';
@@ -144,6 +147,7 @@ export default function CartScreen() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [errorMessage, setErrorMessage] = useState('');
   const [justVerified, setJustVerified] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const insets = useSafeAreaInsets();
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
@@ -157,6 +161,100 @@ export default function CartScreen() {
       setIsAddressInitialized(true);
     }
   }, [user, isAddressInitialized]);
+
+  const handleGetLocation = async () => {
+    if (Platform.OS === 'web') {
+      setIsLoadingLocation(true);
+      try {
+        if (!navigator.geolocation) {
+          alert('Геолокация не поддерживается вашим браузером');
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ru`
+              );
+              const data = await response.json();
+              const address = data.display_name || `${latitude}, ${longitude}`;
+              setDeliveryAddress(address);
+              if (user) {
+                addAddress(address);
+              }
+            } catch (error) {
+              console.error('Ошибка получения адреса:', error);
+              const coords = `${latitude}, ${longitude}`;
+              setDeliveryAddress(coords);
+              if (user) {
+                addAddress(coords);
+              }
+            } finally {
+              setIsLoadingLocation(false);
+            }
+          },
+          (error) => {
+            console.error('Ошибка геолокации:', error);
+            alert('Не удалось получить местоположение');
+            setIsLoadingLocation(false);
+          }
+        );
+      } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Не удалось получить местоположение');
+        setIsLoadingLocation(false);
+      }
+    } else {
+      setIsLoadingLocation(true);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Разрешение на доступ к местоположению отклонено');
+          setIsLoadingLocation(false);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude,
+          longitude,
+        });
+
+        if (reverseGeocode.length > 0) {
+          const addr = reverseGeocode[0];
+          const address = [
+            addr.street,
+            addr.streetNumber,
+            addr.city,
+            addr.region,
+            addr.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          const finalAddress = address || `${latitude}, ${longitude}`;
+          setDeliveryAddress(finalAddress);
+          if (user) {
+            addAddress(finalAddress);
+          }
+        } else {
+          const coords = `${latitude}, ${longitude}`;
+          setDeliveryAddress(coords);
+          if (user) {
+            addAddress(coords);
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка получения местоположения:', error);
+        alert('Не удалось получить местоположение');
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (timeLeft > 0 && showVerifyModal) {
@@ -462,6 +560,18 @@ export default function CartScreen() {
         {deliveryType === 'delivery' && (
           <View style={styles.addressSection}>
             <Text style={styles.sectionTitle}>Адрес доставки</Text>
+            
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={handleGetLocation}
+              disabled={isLoadingLocation}
+            >
+              <Navigation color="#fff" size={20} />
+              <Text style={styles.locationButtonText}>
+                {isLoadingLocation ? 'Определяем...' : 'Определить по геолокации'}
+              </Text>
+            </TouchableOpacity>
+            
             <TextInput
               style={styles.addressInput}
               placeholder="Введите адрес доставки"
@@ -1490,5 +1600,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 8,
     lineHeight: 18,
+  },
+  locationButton: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  locationButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });

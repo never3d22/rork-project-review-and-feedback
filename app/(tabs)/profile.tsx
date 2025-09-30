@@ -9,8 +9,10 @@ import {
   TextInput,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,10 +28,13 @@ import {
   EyeOff,
   Trash2,
   X,
-
   Store,
   ChevronUp,
   ChevronDown,
+  Edit,
+  Calendar,
+  Mail,
+  Navigation,
 } from 'lucide-react-native';
 
 import { useRestaurant } from '@/store/restaurant-store';
@@ -43,6 +48,11 @@ export default function ProfileScreen() {
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editBirthday, setEditBirthday] = useState('');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showDishManagementModal, setShowDishManagementModal] = useState(false);
   const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
@@ -242,6 +252,99 @@ export default function ProfileScreen() {
     updateUser({ addresses: [...currentAddresses, newAddress] });
     setNewAddress('');
     setShowAddressModal(false);
+  };
+
+  const handleGetLocation = async () => {
+    if (Platform.OS === 'web') {
+      setIsLoadingLocation(true);
+      try {
+        if (!navigator.geolocation) {
+          Alert.alert('Ошибка', 'Геолокация не поддерживается вашим браузером');
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=ru`
+              );
+              const data = await response.json();
+              const address = data.display_name || `${latitude}, ${longitude}`;
+              setNewAddress(address);
+            } catch (error) {
+              console.error('Ошибка получения адреса:', error);
+              setNewAddress(`${latitude}, ${longitude}`);
+            } finally {
+              setIsLoadingLocation(false);
+            }
+          },
+          (error) => {
+            console.error('Ошибка геолокации:', error);
+            Alert.alert('Ошибка', 'Не удалось получить местоположение');
+            setIsLoadingLocation(false);
+          }
+        );
+      } catch (error) {
+        console.error('Ошибка:', error);
+        Alert.alert('Ошибка', 'Не удалось получить местоположение');
+        setIsLoadingLocation(false);
+      }
+    } else {
+      setIsLoadingLocation(true);
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Ошибка', 'Разрешение на доступ к местоположению отклонено');
+          setIsLoadingLocation(false);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = location.coords;
+
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude,
+          longitude,
+        });
+
+        if (reverseGeocode.length > 0) {
+          const addr = reverseGeocode[0];
+          const address = [
+            addr.street,
+            addr.streetNumber,
+            addr.city,
+            addr.region,
+            addr.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          setNewAddress(address || `${latitude}, ${longitude}`);
+        } else {
+          setNewAddress(`${latitude}, ${longitude}`);
+        }
+      } catch (error) {
+        console.error('Ошибка получения местоположения:', error);
+        Alert.alert('Ошибка', 'Не удалось получить местоположение');
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    }
+  };
+
+  const handleSaveProfile = () => {
+    if (!editName.trim()) {
+      Alert.alert('Ошибка', 'Введите имя');
+      return;
+    }
+    updateUser({
+      name: editName,
+      email: editEmail,
+      birthday: editBirthday,
+    });
+    setShowEditProfileModal(false);
+    Alert.alert('Успех', 'Профиль обновлен');
   };
 
   const handleRemoveAddress = (index: number) => {
@@ -526,34 +629,76 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {!user.isAdmin && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <MapPin color="#333" size={20} />
-              <Text style={styles.sectionTitle}>Мои адреса</Text>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setShowAddressModal(true)}
-              >
-                <Plus color="#9a4759" size={20} />
-              </TouchableOpacity>
-            </View>
-            
-            {user.addresses && user.addresses.length > 0 ? (
-              user.addresses.map((address, index) => (
-                <View key={index} style={styles.addressCard}>
-                  <Text style={styles.addressText}>{address}</Text>
-                  <TouchableOpacity
-                    style={styles.removeAddressButton}
-                    onPress={() => handleRemoveAddress(index)}
-                  >
-                    <Trash2 color="#ff4444" size={16} />
-                  </TouchableOpacity>
+          <>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <User color="#333" size={20} />
+                <Text style={styles.sectionTitle}>Личная информация</Text>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => {
+                    setEditName(user.name);
+                    setEditEmail(user.email || '');
+                    setEditBirthday(user.birthday || '');
+                    setShowEditProfileModal(true);
+                  }}
+                >
+                  <Edit color="#9a4759" size={20} />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.infoCard}>
+                <View style={styles.infoRow}>
+                  <User color="#666" size={16} />
+                  <Text style={styles.infoLabel}>Имя:</Text>
+                  <Text style={styles.infoValue}>{user.name}</Text>
                 </View>
-              ))
-            ) : (
-              <Text style={styles.emptyText}>Нет сохраненных адресов</Text>
-            )}
-          </View>
+                {user.email && (
+                  <View style={styles.infoRow}>
+                    <Mail color="#666" size={16} />
+                    <Text style={styles.infoLabel}>Email:</Text>
+                    <Text style={styles.infoValue}>{user.email}</Text>
+                  </View>
+                )}
+                {user.birthday && (
+                  <View style={styles.infoRow}>
+                    <Calendar color="#666" size={16} />
+                    <Text style={styles.infoLabel}>Дата рождения:</Text>
+                    <Text style={styles.infoValue}>{user.birthday}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <MapPin color="#333" size={20} />
+                <Text style={styles.sectionTitle}>Мои адреса</Text>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => setShowAddressModal(true)}
+                >
+                  <Plus color="#9a4759" size={20} />
+                </TouchableOpacity>
+              </View>
+              
+              {user.addresses && user.addresses.length > 0 ? (
+                user.addresses.map((address, index) => (
+                  <View key={index} style={styles.addressCard}>
+                    <Text style={styles.addressText}>{address}</Text>
+                    <TouchableOpacity
+                      style={styles.removeAddressButton}
+                      onPress={() => handleRemoveAddress(index)}
+                    >
+                      <Trash2 color="#ff4444" size={16} />
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>Нет сохраненных адресов</Text>
+              )}
+            </View>
+          </>
         )}
 
         {user.isAdmin && (
@@ -618,6 +763,60 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal
+        visible={showEditProfileModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditProfileModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Редактировать профиль</Text>
+            
+            <Text style={styles.fieldLabel}>Имя</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Введите имя"
+              value={editName}
+              onChangeText={setEditName}
+            />
+            
+            <Text style={styles.fieldLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Введите email"
+              value={editEmail}
+              onChangeText={setEditEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            
+            <Text style={styles.fieldLabel}>Дата рождения</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="ДД.ММ.ГГГГ"
+              value={editBirthday}
+              onChangeText={setEditBirthday}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowEditProfileModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={handleSaveProfile}
+              >
+                <Text style={styles.modalButtonConfirmText}>Сохранить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
         visible={showAddressModal}
         transparent
         animationType="slide"
@@ -626,6 +825,17 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Добавить адрес</Text>
+            
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={handleGetLocation}
+              disabled={isLoadingLocation}
+            >
+              <Navigation color="#fff" size={20} />
+              <Text style={styles.locationButtonText}>
+                {isLoadingLocation ? 'Определяем...' : 'Определить по геолокации'}
+              </Text>
+            </TouchableOpacity>
             
             <TextInput
               style={[styles.input, { minHeight: 80 }]}
@@ -2063,6 +2273,43 @@ const styles = StyleSheet.create({
   removeLogoText: {
     color: '#fff',
     fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  infoCard: {
+    gap: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500' as const,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+  },
+  locationButton: {
+    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  locationButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600' as const,
   },
 });
