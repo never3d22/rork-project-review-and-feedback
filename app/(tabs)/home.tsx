@@ -48,6 +48,12 @@ export default function MenuScreen() {
     addToCart(dish);
   };
 
+  const getModalDishQuantity = () => {
+    if (!selectedDish) return 0;
+    const cartItem = cart.find(item => item.dish.id === selectedDish.id);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
   const handleGoToCart = () => {
     setShowDishModal(false);
     router.push('/(tabs)/cart');
@@ -199,8 +205,8 @@ export default function MenuScreen() {
         </LinearGradient>
       </Animated.View>
 
-      {/* Order Status Block */}
-      {currentOrder && (
+      {/* Order Status Block for Users */}
+      {currentOrder && !user?.isAdmin && (
         <TouchableOpacity 
           style={styles.orderStatusBlock}
           onPress={() => router.push('/(tabs)/profile')}
@@ -216,6 +222,43 @@ export default function MenuScreen() {
             </View>
           </View>
         </TouchableOpacity>
+      )}
+
+      {/* Admin Orders Section */}
+      {user?.isAdmin && orders.length > 0 && (
+        <View style={styles.adminOrdersSection}>
+          <Text style={styles.adminOrdersTitle}>Заказы пользователей</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.adminOrdersScroll}
+          >
+            {orders.map(order => (
+              <TouchableOpacity
+                key={order.id}
+                style={styles.adminOrderCard}
+                onPress={() => router.push('/admin')}
+                activeOpacity={0.9}
+              >
+                <View style={styles.adminOrderHeader}>
+                  <Text style={styles.adminOrderId}>#{order.id}</Text>
+                  <View style={[styles.adminOrderStatus, { backgroundColor: getStatusColor(order.status) }]}>
+                    <Text style={styles.adminOrderStatusText}>{getStatusText(order.status)}</Text>
+                  </View>
+                </View>
+                <Text style={styles.adminOrderTotal}>{order.total} ₽</Text>
+                <Text style={styles.adminOrderDate}>
+                  {new Date(order.createdAt).toLocaleString('ru-RU', { 
+                    day: '2-digit', 
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       )}
 
       <View style={styles.categoriesContainer}>
@@ -388,13 +431,33 @@ export default function MenuScreen() {
                   <View style={styles.modalActions}>
                     {selectedDish.available ? (
                       <>
-                        <TouchableOpacity
-                          style={styles.addToCartButton}
-                          onPress={() => handleAddToCart(selectedDish)}
-                        >
-                          <Plus color="#fff" size={20} />
-                          <Text style={styles.addToCartText}>Добавить</Text>
-                        </TouchableOpacity>
+                        {getModalDishQuantity() > 0 ? (
+                          <View style={styles.modalQuantityControls}>
+                            <TouchableOpacity
+                              style={styles.modalQuantityButton}
+                              onPress={() => updateQuantity(selectedDish.id, getModalDishQuantity() - 1)}
+                              activeOpacity={0.8}
+                            >
+                              <Minus color="#fff" size={18} />
+                            </TouchableOpacity>
+                            <Text style={styles.modalQuantityText}>{getModalDishQuantity()}</Text>
+                            <TouchableOpacity
+                              style={styles.modalQuantityButton}
+                              onPress={() => updateQuantity(selectedDish.id, getModalDishQuantity() + 1)}
+                              activeOpacity={0.8}
+                            >
+                              <Plus color="#fff" size={18} />
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.addToCartButton}
+                            onPress={() => handleAddToCart(selectedDish)}
+                          >
+                            <Plus color="#fff" size={20} />
+                            <Text style={styles.addToCartText}>Добавить</Text>
+                          </TouchableOpacity>
+                        )}
                         
                         <TouchableOpacity
                           style={styles.goToCartButton}
@@ -908,5 +971,101 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600' as const,
     color: '#fff',
+  },
+  modalQuantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#9a4759',
+    borderRadius: 25,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 16,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  modalQuantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalQuantityText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#fff',
+    minWidth: 30,
+    textAlign: 'center' as const,
+  },
+  adminOrdersSection: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  adminOrdersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  adminOrdersScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  adminOrderCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    padding: 16,
+    width: 180,
+    borderWidth: 1,
+    borderColor: '#e8eaed',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  adminOrderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  adminOrderId: {
+    fontSize: 14,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  adminOrderStatus: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  adminOrderStatusText: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  adminOrderTotal: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#9a4759',
+    marginBottom: 4,
+  },
+  adminOrderDate: {
+    fontSize: 12,
+    color: '#666',
   },
 });
