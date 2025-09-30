@@ -784,41 +784,46 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Редактировать профиль</Text>
             
-            <Text style={styles.fieldLabel}>Имя</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Введите имя"
-              value={editName}
-              onChangeText={setEditName}
-            />
-            
-            <Text style={styles.fieldLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Введите email"
-              value={editEmail}
-              onChangeText={setEditEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            
-            <Text style={styles.fieldLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Введите email"
-              value={editEmail}
-              onChangeText={setEditEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            
-            <Text style={styles.fieldLabel}>Дата рождения</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="ДД.ММ.ГГГГ"
-              value={editBirthday}
-              onChangeText={setEditBirthday}
-            />
+            <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Имя</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Введите имя"
+                value={editName}
+                onChangeText={setEditName}
+              />
+              
+              <Text style={styles.fieldLabel}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Введите email"
+                value={editEmail}
+                onChangeText={setEditEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              
+              <Text style={styles.fieldLabel}>Дата рождения</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="ДД.ММ.ГГГГ"
+                value={editBirthday}
+                onChangeText={setEditBirthday}
+              />
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={handleGetLocation}
+                disabled={isLoadingLocation}
+              >
+                <Navigation color="#fff" size={18} />
+                <Text style={styles.locationButtonText}>
+                  {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -848,25 +853,30 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Добавить адрес</Text>
             
-            <TouchableOpacity
-              style={styles.locationButton}
-              onPress={handleGetLocation}
-              disabled={isLoadingLocation}
-            >
-              <Navigation color="#fff" size={18} />
-              <Text style={styles.locationButtonText}>
-                {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
-              </Text>
-            </TouchableOpacity>
-            
-            <TextInput
-              style={[styles.input, { minHeight: 80 }]}
-              placeholder="Введите адрес"
-              value={newAddress}
-              onChangeText={setNewAddress}
-              multiline
-              textAlignVertical="top"
-            />
+            <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Адрес</Text>
+              <TextInput
+                style={[styles.input, { minHeight: 80 }]}
+                placeholder="Введите адрес"
+                value={newAddress}
+                onChangeText={setNewAddress}
+                multiline
+                textAlignVertical="top"
+              />
+              
+              <View style={styles.divider} />
+              
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={handleGetLocation}
+                disabled={isLoadingLocation}
+              >
+                <Navigation color="#fff" size={18} />
+                <Text style={styles.locationButtonText}>
+                  {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -2320,6 +2330,11 @@ const styles = StyleSheet.create({
   },
   phoneIcon: {
     fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 20,
   },
   locationButton: {
     backgroundColor: '#9a4759',
