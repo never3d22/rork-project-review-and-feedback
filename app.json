@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.project-review-and-feedback",
+      "bundleIdentifier": "app.rork.firdusi",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
@@ -33,7 +33,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.project-review-and-feedback",
+      "package": "app.rork.firdusi",
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
