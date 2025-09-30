@@ -142,6 +142,7 @@ export default function CartScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [errorMessage, setErrorMessage] = useState('');
+  const [justVerified, setJustVerified] = useState(false);
   const insets = useSafeAreaInsets();
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
@@ -253,20 +254,18 @@ export default function CartScreen() {
         setAuthPhone('');
         setVerificationCode(['', '', '', '', '', '']);
         setErrorMessage('');
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        handleCheckout();
+        setIsLoading(false);
+        setJustVerified(true);
       } else {
         setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
+        setIsLoading(false);
         setTimeout(() => {
           codeInputRefs.current[0]?.focus();
         }, 100);
       }
     } catch {
       setErrorMessage('Произошла ошибка при проверке кода');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -354,6 +353,16 @@ export default function CartScreen() {
       alert('Ошибка при оформлении заказа');
     }
   };
+
+  useEffect(() => {
+    if (justVerified && user && cart.length > 0) {
+      setJustVerified(false);
+      const timer = setTimeout(() => {
+        handleCheckout();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [justVerified, user, cart.length]);
 
   if (cart.length === 0) {
     return (
