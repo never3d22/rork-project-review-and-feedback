@@ -62,6 +62,7 @@ export default function ProfileScreen() {
   const [restaurantAddress, setRestaurantAddress] = useState('');
   const [restaurantPhone, setRestaurantPhone] = useState('');
   const [restaurantWorkingHours, setRestaurantWorkingHours] = useState('');
+  const [restaurantLogo, setRestaurantLogo] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -596,6 +597,7 @@ export default function ProfileScreen() {
                 setRestaurantAddress(restaurant.address);
                 setRestaurantPhone(restaurant.phone);
                 setRestaurantWorkingHours(restaurant.workingHours);
+                setRestaurantLogo(restaurant.logo || '');
                 setShowRestaurantSettingsModal(true);
               }}
               activeOpacity={0.9}
@@ -1281,6 +1283,14 @@ export default function ProfileScreen() {
                 value={restaurantWorkingHours}
                 onChangeText={setRestaurantWorkingHours}
               />
+              
+              <Text style={styles.fieldLabel}>Логотип (URL)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="URL логотипа"
+                value={restaurantLogo}
+                onChangeText={setRestaurantLogo}
+              />
             </ScrollView>
             
             <View style={styles.modalButtons}>
@@ -1302,6 +1312,7 @@ export default function ProfileScreen() {
                     address: restaurantAddress,
                     phone: restaurantPhone,
                     workingHours: restaurantWorkingHours,
+                    logo: restaurantLogo,
                   });
                   setShowRestaurantSettingsModal(false);
                   Alert.alert('Успех', 'Настройки обновлены');
