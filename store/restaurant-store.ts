@@ -217,6 +217,15 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     setUser(prevUser => prevUser ? { ...prevUser, ...userData } : null);
   }, []);
 
+  const addAddress = useCallback((address: string) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const currentAddresses = prevUser.addresses || [];
+      if (currentAddresses.includes(address)) return prevUser;
+      return { ...prevUser, addresses: [...currentAddresses, address] };
+    });
+  }, []);
+
   const addDish = useCallback((dish: Omit<Dish, 'id'>) => {
     const newDish: Dish = {
       ...dish,
@@ -491,5 +500,6 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     toggleCategoryVisibility,
     sendSMSCode,
     verifySMSCode,
+    addAddress,
   };
 });

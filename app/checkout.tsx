@@ -15,6 +15,7 @@ import {
   Banknote, 
   Smartphone,
   MessageSquare,
+  MapPin,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
@@ -22,13 +23,14 @@ import { useRestaurant } from '@/store/restaurant-store';
 type PaymentMethod = 'card' | 'cash' | 'online';
 
 export default function CheckoutScreen() {
-  const { cart, getCartTotal, createOrder, user } = useRestaurant();
+  const { cart, getCartTotal, createOrder, user, addAddress } = useRestaurant();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const needUtensils = true;
   const [comments, setComments] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
 
   const paymentOptions = [
     { id: 'card' as PaymentMethod, title: 'Банковская карта', icon: CreditCard },
@@ -57,7 +59,12 @@ export default function CheckoutScreen() {
         paymentMethod,
         deliveryType: 'pickup',
         comments,
+        deliveryAddress: deliveryAddress || undefined,
       });
+      
+      if (deliveryAddress && deliveryAddress.trim()) {
+        addAddress(deliveryAddress.trim());
+      }
       
       setOrderId(newOrderId);
       setShowSuccessModal(true);
@@ -123,6 +130,22 @@ export default function CheckoutScreen() {
         </View>
 
 
+
+        <View style={styles.section}>
+          <View style={styles.commentHeader}>
+            <MapPin color="#333" size={20} />
+            <Text style={styles.sectionTitle}>Адрес доставки</Text>
+          </View>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Введите адрес доставки (необязательно)"
+            value={deliveryAddress}
+            onChangeText={setDeliveryAddress}
+            multiline
+            numberOfLines={2}
+            textAlignVertical="top"
+          />
+        </View>
 
         <View style={styles.section}>
           <View style={styles.commentHeader}>
