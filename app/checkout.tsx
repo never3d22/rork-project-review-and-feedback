@@ -51,6 +51,10 @@ export default function CheckoutScreen() {
     }
 
     try {
+      if (deliveryAddress && deliveryAddress.trim()) {
+        addAddress(deliveryAddress.trim());
+      }
+      
       const newOrderId = createOrder({
         items: cart,
         total: getCartTotal(),
@@ -61,10 +65,6 @@ export default function CheckoutScreen() {
         comments,
         deliveryAddress: deliveryAddress || undefined,
       });
-      
-      if (deliveryAddress && deliveryAddress.trim()) {
-        addAddress(deliveryAddress.trim());
-      }
       
       setOrderId(newOrderId);
       setShowSuccessModal(true);
