@@ -858,7 +858,7 @@ export default function AdminScreen() {
             <ScrollView style={styles.modalForm} showsVerticalScrollIndicator={false}>
               <View style={styles.fieldContainer}>
                 <Text style={styles.fieldLabel}>Логотип ресторана</Text>
-                <Text style={styles.fieldHint}>Рекомендуемый размер: 800x400 пикселей</Text>
+                <Text style={styles.fieldHint}>Рекомендуемый размер: 800x400 пикселей (PNG, JPG)</Text>
                 {restaurantForm.logo ? (
                   <View style={styles.logoPreviewContainer}>
                     <Image source={{ uri: restaurantForm.logo }} style={styles.logoPreview} />
@@ -1496,7 +1496,6 @@ const styles = StyleSheet.create({
   },
   modalForm: {
     padding: 20,
-    maxHeight: 400,
   },
   input: {
     borderWidth: 1,
