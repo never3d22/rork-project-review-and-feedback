@@ -157,9 +157,7 @@ export default function CartScreen() {
   const insets = useSafeAreaInsets();
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
-  useEffect(() => {
-    setShowSuccessModal(false);
-  }, []);
+
 
   useEffect(() => {
     if (user && !isAddressInitialized && user.addresses && user.addresses.length > 0) {
@@ -469,10 +467,6 @@ export default function CartScreen() {
   useEffect(() => {
     if (justVerified && user && cart.length > 0) {
       setJustVerified(false);
-      const timer = setTimeout(() => {
-        handleCheckout();
-      }, 300);
-      return () => clearTimeout(timer);
     }
   }, [justVerified, user, cart.length]);
 
