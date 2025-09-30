@@ -186,26 +186,34 @@ export default function MenuScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
-        <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
-          <LinearGradient
-            colors={['#9a4759', '#b85a6e']}
-            style={styles.header}
-          >
-            <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
-              <Text style={styles.restaurantName}>{restaurant.name}</Text>
-              <View style={styles.restaurantInfo}>
-                <View style={styles.infoItem}>
-                  <MapPin color="#fff" size={16} />
-                  <Text style={styles.infoText}>{restaurant.address}</Text>
+        <View style={styles.headerBackground}>
+          <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
+            <LinearGradient
+              colors={['#1a1a1a', '#2a2a2a']}
+              style={styles.header}
+            >
+              <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+                <View style={styles.logoContainer}>
+                  <Image 
+                    source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i3drirnswip2jkkao4snr' }}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
                 </View>
-                <View style={styles.infoItem}>
-                  <Clock color="#fff" size={16} />
-                  <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
+                <View style={styles.restaurantInfo}>
+                  <View style={styles.infoItem}>
+                    <MapPin color="#D4AF37" size={16} />
+                    <Text style={styles.infoText}>{restaurant.address}</Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Clock color="#D4AF37" size={16} />
+                    <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
+                  </View>
                 </View>
-              </View>
-            </Animated.View>
-          </LinearGradient>
-        </Animated.View>
+              </Animated.View>
+            </LinearGradient>
+          </Animated.View>
+        </View>
 
         {/* Order Status Block for Users */}
         {currentOrder && !user?.isAdmin && (
@@ -224,43 +232,6 @@ export default function MenuScreen() {
               </View>
             </View>
           </TouchableOpacity>
-        )}
-
-        {/* Admin Orders Section */}
-        {user?.isAdmin && orders.length > 0 && (
-          <View style={styles.adminOrdersSection}>
-            <Text style={styles.adminOrdersTitle}>Заказы пользователей</Text>
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.adminOrdersScroll}
-            >
-              {orders.map(order => (
-                <TouchableOpacity
-                  key={order.id}
-                  style={styles.adminOrderCard}
-                  onPress={() => router.push('/(tabs)/profile')}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.adminOrderHeader}>
-                    <Text style={styles.adminOrderId}>#{order.id}</Text>
-                    <View style={[styles.adminOrderStatus, { backgroundColor: getStatusColor(order.status) }]}>
-                      <Text style={styles.adminOrderStatusText}>{getStatusText(order.status)}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.adminOrderTotal}>{order.total} ₽</Text>
-                  <Text style={styles.adminOrderDate}>
-                    {new Date(order.createdAt).toLocaleString('ru-RU', { 
-                      day: '2-digit', 
-                      month: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
         )}
       </View>
 
@@ -493,15 +464,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f7fa',
   },
   headerWrapper: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a1a',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+  },
+  headerBackground: {
+    backgroundColor: '#1a1a1a',
   },
   headerContainer: {
     overflow: 'hidden',
@@ -517,12 +491,13 @@ const styles = StyleSheet.create({
   headerContent: {
     marginTop: 10,
   },
-  restaurantName: {
-    fontSize: 28,
-    fontWeight: 'bold' as const,
-    color: '#fff',
-    marginBottom: 12,
-    letterSpacing: 0.5,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    width: 120,
+    height: 60,
   },
   restaurantInfo: {
     gap: 8,
@@ -533,7 +508,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   infoText: {
-    color: '#fff',
+    color: '#D4AF37',
     fontSize: 14,
     opacity: 0.9,
   },
@@ -942,9 +917,9 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
   },
   orderStatusBlock: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: 'rgba(212, 175, 55, 0.2)',
   },
   orderStatusContent: {
     flexDirection: 'row',
@@ -958,12 +933,13 @@ const styles = StyleSheet.create({
   orderStatusTitle: {
     fontSize: 16,
     fontWeight: 'bold' as const,
-    color: '#333',
+    color: '#D4AF37',
     marginBottom: 4,
   },
   orderStatusSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#D4AF37',
+    opacity: 0.8,
   },
   orderStatusBadge: {
     paddingHorizontal: 12,

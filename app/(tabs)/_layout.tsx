@@ -1,11 +1,12 @@
 import { Tabs } from "expo-router";
-import { Home, ShoppingCart, User } from "lucide-react-native";
+import { Home, ShoppingCart, User, ClipboardList } from "lucide-react-native";
 import React from "react";
 import { useRestaurant } from "@/store/restaurant-store";
 
 export default function TabLayout() {
-  const { cart } = useRestaurant();
+  const { cart, orders, user } = useRestaurant();
   const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const pendingOrdersCount = orders.filter(order => order.status === 'pending' || order.status === 'preparing').length;
 
   return (
     <Tabs
@@ -39,6 +40,16 @@ export default function TabLayout() {
           tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
         }}
       />
+      {user?.isAdmin && (
+        <Tabs.Screen
+          name="orders"
+          options={{
+            title: "Заказы",
+            tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
+            tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="profile"
         options={{
