@@ -522,7 +522,6 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-
         {!user.isAdmin && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -551,6 +550,29 @@ export default function ProfileScreen() {
             ) : (
               <Text style={styles.emptyText}>Нет сохраненных адресов</Text>
             )}
+          </View>
+        )}
+
+        {user.isAdmin && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Settings color="#333" size={20} />
+              <Text style={styles.sectionTitle}>Управление рестораном</Text>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.adminFunctionCard}
+              onPress={() => router.push('/admin')}
+              activeOpacity={0.9}
+            >
+              <View style={styles.adminFunctionIcon}>
+                <ShoppingBag color="#9a4759" size={24} />
+              </View>
+              <View style={styles.adminFunctionInfo}>
+                <Text style={styles.adminFunctionTitle}>Управление заказами</Text>
+                <Text style={styles.adminFunctionDescription}>Просмотр и обработка заказов</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -957,6 +979,48 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold' as const,
     color: '#333',
+  },
+  adminFunctionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  adminFunctionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#9a4759',
+  },
+  adminFunctionInfo: {
+    flex: 1,
+  },
+  adminFunctionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 4,
+  },
+  adminFunctionDescription: {
+    fontSize: 14,
+    color: '#666',
   },
   section: {
     backgroundColor: '#fff',
