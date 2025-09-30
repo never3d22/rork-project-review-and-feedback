@@ -107,6 +107,13 @@ export default function ProfileScreen() {
     return `+7 (${limited.slice(1, 4)}) ${limited.slice(4, 7)}-${limited.slice(7, 9)}-${limited.slice(9)}`;
   };
 
+  const formatPhoneDisplay = (phone: string): string => {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length !== 11) return phone;
+    return `+7 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7, 9)}-${cleaned.slice(9)}`;
+  };
+
   const getCleanPhoneNumber = (formattedPhone: string): string => {
     return formattedPhone.replace(/\D/g, '');
   };
@@ -653,6 +660,11 @@ export default function ProfileScreen() {
                   <Text style={styles.infoLabel}>Имя:</Text>
                   <Text style={styles.infoValue}>{user.name}</Text>
                 </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.phoneIcon}>📱</Text>
+                  <Text style={styles.infoLabel}>Телефон:</Text>
+                  <Text style={styles.infoValue}>{formatPhoneDisplay(user.phone || '')}</Text>
+                </View>
                 {user.email && (
                   <View style={styles.infoRow}>
                     <Mail color="#666" size={16} />
@@ -831,9 +843,9 @@ export default function ProfileScreen() {
               onPress={handleGetLocation}
               disabled={isLoadingLocation}
             >
-              <Navigation color="#fff" size={20} />
+              <Navigation color="#fff" size={18} />
               <Text style={styles.locationButtonText}>
-                {isLoadingLocation ? 'Определяем...' : 'Определить по геолокации'}
+                {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
               </Text>
             </TouchableOpacity>
             
@@ -2296,20 +2308,31 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
+  phoneIcon: {
+    fontSize: 16,
+  },
   locationButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#9a4759',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 16,
     gap: 8,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   locationButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600' as const,
   },
 });

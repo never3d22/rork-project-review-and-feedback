@@ -566,9 +566,9 @@ export default function CartScreen() {
               onPress={handleGetLocation}
               disabled={isLoadingLocation}
             >
-              <Navigation color="#fff" size={20} />
+              <Navigation color="#fff" size={18} />
               <Text style={styles.locationButtonText}>
-                {isLoadingLocation ? 'Определяем...' : 'Определить по геолокации'}
+                {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
               </Text>
             </TouchableOpacity>
             
@@ -1602,19 +1602,27 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   locationButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#9a4759',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 16,
     gap: 8,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   locationButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600' as const,
   },
 });
