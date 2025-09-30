@@ -121,7 +121,7 @@ function SwipeableCartItem({ item, onUpdateQuantity, onRemove }: SwipeableCartIt
 }
 
 export default function CartScreen() {
-  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, loginAsUser, sendSMSCode, verifySMSCode } = useRestaurant();
+  const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, sendSMSCode, verifySMSCode, addAddress } = useRestaurant();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -253,11 +253,13 @@ export default function CartScreen() {
         setAuthPhone('');
         setVerificationCode(['', '', '', '', '', '']);
         setErrorMessage('');
+        
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         handleCheckout();
       } else {
         setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
-        // Фокусируемся на первое поле при ошибке
         setTimeout(() => {
           codeInputRefs.current[0]?.focus();
         }, 100);
@@ -315,7 +317,6 @@ export default function CartScreen() {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     
-    // Проверяем, авторизован ли пользователь
     if (!user) {
       setShowPhoneModal(true);
       return;
@@ -327,6 +328,10 @@ export default function CartScreen() {
     }
 
     try {
+      if (deliveryAddress && deliveryAddress.trim()) {
+        addAddress(deliveryAddress.trim());
+      }
+      
       const newOrderId = createOrder({
         items: cart,
         total: getCartTotal(),
@@ -342,6 +347,8 @@ export default function CartScreen() {
       setOrderId(newOrderId);
       setShowSuccessModal(true);
       clearCart();
+      setDeliveryAddress('');
+      setComments('');
     } catch (error) {
       console.error('Error creating order:', error);
       alert('Ошибка при оформлении заказа');

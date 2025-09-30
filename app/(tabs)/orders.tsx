@@ -79,6 +79,20 @@ export default function OrdersScreen() {
         <Text style={styles.orderTotal}>{order.total} ₽</Text>
       </View>
 
+      {order.deliveryAddress && (
+        <View style={styles.deliveryInfo}>
+          <Text style={styles.deliveryLabel}>Адрес доставки:</Text>
+          <Text style={styles.deliveryAddress}>{order.deliveryAddress}</Text>
+        </View>
+      )}
+
+      {order.deliveryTime && (
+        <View style={styles.deliveryInfo}>
+          <Text style={styles.deliveryLabel}>Время:</Text>
+          <Text style={styles.deliveryTime}>{order.deliveryTime}</Text>
+        </View>
+      )}
+
       <View style={styles.orderItems}>
         {order.items.map((item, index) => (
           <Text key={index} style={styles.orderItem}>
@@ -447,6 +461,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+  },
+  deliveryInfo: {
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  deliveryLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
+    fontWeight: '500' as const,
+  },
+  deliveryAddress: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  deliveryTime: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '600' as const,
   },
   orderActions: {
     flexDirection: 'row',
