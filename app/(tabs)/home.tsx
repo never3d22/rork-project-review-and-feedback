@@ -46,7 +46,6 @@ export default function MenuScreen() {
 
   const handleAddToCart = (dish: Dish) => {
     addToCart(dish);
-    setShowDishModal(false);
   };
 
   const handleGoToCart = () => {
