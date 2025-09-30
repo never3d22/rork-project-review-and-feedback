@@ -193,13 +193,15 @@ export default function MenuScreen() {
               style={styles.header}
             >
               <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
-                <View style={styles.logoContainer}>
-                  <Image 
-                    source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i3drirnswip2jkkao4snr' }}
-                    style={styles.logo}
-                    resizeMode="contain"
-                  />
-                </View>
+                {restaurant.logo && (
+                  <View style={styles.logoContainer}>
+                    <Image 
+                      source={{ uri: restaurant.logo }}
+                      style={styles.logo}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
                 <View style={styles.restaurantInfo}>
                   <View style={styles.infoItem}>
                     <MapPin color="#D4AF37" size={16} />
@@ -496,8 +498,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: {
-    width: 120,
-    height: 60,
+    width: 140,
+    height: 70,
   },
   restaurantInfo: {
     gap: 8,

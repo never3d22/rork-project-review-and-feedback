@@ -53,6 +53,7 @@ export interface Restaurant {
   deliveryMaxTime: number;
   pickupMinTime: number;
   pickupMaxTime: number;
+  logo?: string;
 }
 
 export interface Category {

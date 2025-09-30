@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react-native';
@@ -14,6 +16,9 @@ import { Order } from '@/types/restaurant';
 export default function OrdersScreen() {
   const { orders, updateOrderStatus, cancelOrder, user } = useRestaurant();
   const insets = useSafeAreaInsets();
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   if (!user?.isAdmin) {
     return (
@@ -95,7 +100,10 @@ export default function OrdersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => cancelOrder(order.id)}
+                onPress={() => {
+                  setCancellingOrder(order);
+                  setShowCancelModal(true);
+                }}
               >
                 <XCircle color="#fff" size={18} />
                 <Text style={styles.actionButtonText}>Отменить</Text>
@@ -113,7 +121,10 @@ export default function OrdersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => cancelOrder(order.id)}
+                onPress={() => {
+                  setCancellingOrder(order);
+                  setShowCancelModal(true);
+                }}
               >
                 <XCircle color="#fff" size={18} />
                 <Text style={styles.actionButtonText}>Отменить</Text>
@@ -131,7 +142,10 @@ export default function OrdersScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => cancelOrder(order.id)}
+                onPress={() => {
+                  setCancellingOrder(order);
+                  setShowCancelModal(true);
+                }}
               >
                 <XCircle color="#fff" size={18} />
                 <Text style={styles.actionButtonText}>Отменить</Text>
@@ -204,6 +218,81 @@ export default function OrdersScreen() {
           </>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showCancelModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowCancelModal(false);
+          setCancellingOrder(null);
+          setCancelReason('');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Отмена заказа</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancellingOrder(null);
+                  setCancelReason('');
+                }}
+              >
+                <XCircle color="#666" size={24} />
+              </TouchableOpacity>
+            </View>
+            
+            {cancellingOrder && (
+              <View style={styles.modalBody}>
+                <Text style={styles.cancelOrderText}>
+                  Вы уверены, что хотите отменить заказ #{cancellingOrder.id}?
+                </Text>
+                
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>Причина отмены</Text>
+                  <TextInput
+                    style={[styles.input, { minHeight: 100 }]}
+                    placeholder="Укажите причину отмены заказа"
+                    value={cancelReason}
+                    onChangeText={setCancelReason}
+                    multiline
+                    textAlignVertical="top"
+                  />
+                </View>
+              </View>
+            )}
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancellingOrder(null);
+                  setCancelReason('');
+                }}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmCancelButton}
+                onPress={() => {
+                  if (cancellingOrder) {
+                    cancelOrder(cancellingOrder.id, cancelReason || 'Отменено администратором');
+                    setShowCancelModal(false);
+                    setCancellingOrder(null);
+                    setCancelReason('');
+                  }
+                }}
+              >
+                <Text style={styles.confirmCancelButtonText}>Отменить заказ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -405,5 +494,91 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center' as const,
     marginTop: 40,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 500,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  cancelOrderText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'center' as const,
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  fieldContainer: {
+    marginBottom: 16,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  modalButtonCancelText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#666',
+  },
+  confirmCancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#ff4444',
+    alignItems: 'center',
+  },
+  confirmCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
 });

@@ -59,6 +59,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     deliveryMaxTime: 45,
     pickupMinTime: 25,
     pickupMaxTime: 35,
+    logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i3drirnswip2jkkao4snr',
   });
 
   // Load data from storage on mount
@@ -303,37 +304,34 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   // Функция для отправки реального SMS
   const sendRealSMS = useCallback(async (phone: string, code: string): Promise<boolean> => {
     try {
-      const SMS_API_ID = process.env.EXPO_PUBLIC_SMS_API_ID || '457A5DBA-D814-BC10-DDD7-645DC659658E';
+      const SMS_API_ID = '457A5DBA-D814-BC10-DDD7-645DC659658E';
       const message = `Ваш код подтверждения: ${code}`;
       
       console.log(`\n========================================`);
       console.log(`📱 ОТПРАВКА SMS`);
       console.log(`Номер: ${phone}`);
       console.log(`Код: ${code}`);
+      console.log(`API ID: ${SMS_API_ID}`);
       console.log(`========================================\n`);
       
-      // Получаем IP адрес пользователя
-      const userIP = await getUserIP();
-      console.log('IP адрес пользователя:', userIP);
-      
       // Форматируем номер для SMS.ru (должен начинаться с 7)
-      const formattedPhone = phone.startsWith('8') ? '7' + phone.slice(1) : phone.startsWith('7') ? phone : '7' + phone;
-      
-      // Отправляем SMS через SMS.ru API с IP адресом
-      let smsUrl = `https://sms.ru/sms/send?api_id=${SMS_API_ID}&to=${formattedPhone}&msg=${encodeURIComponent(message)}&json=1`;
-      
-      // Добавляем IP адрес если удалось его получить
-      if (userIP) {
-        smsUrl += `&ip=${userIP}`;
+      let formattedPhone = phone.replace(/\D/g, '');
+      if (formattedPhone.startsWith('8')) {
+        formattedPhone = '7' + formattedPhone.slice(1);
+      } else if (!formattedPhone.startsWith('7')) {
+        formattedPhone = '7' + formattedPhone;
       }
       
+      console.log('Форматированный номер:', formattedPhone);
+      
+      // Отправляем SMS через SMS.ru API
+      const smsUrl = `https://sms.ru/sms/send?api_id=${SMS_API_ID}&to=${formattedPhone}&msg=${encodeURIComponent(message)}&json=1`;
+      
       console.log('Отправляем запрос на SMS.ru...');
+      console.log('URL:', smsUrl.replace(SMS_API_ID, 'API_ID_HIDDEN'));
       
       const response = await fetch(smsUrl, {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
       });
       
       console.log('Статус ответа:', response.status);
@@ -347,11 +345,16 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
           return true;
         } else {
           console.error('❌ Ошибка SMS.ru:', result.status_text || result.status);
+          if (result.status_code) {
+            console.error('Код ошибки:', result.status_code);
+          }
           console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
           return true;
         }
       } else {
+        const errorText = await response.text();
         console.error('❌ HTTP ошибка:', response.status, response.statusText);
+        console.error('Тело ответа:', errorText);
         console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
         return true;
       }
@@ -361,7 +364,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
       return true;
     }
-  }, [getUserIP]);
+  }, []);
 
   const sendSMSCode = useCallback(async (phone: string): Promise<boolean> => {
     try {

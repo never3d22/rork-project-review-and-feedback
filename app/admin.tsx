@@ -9,7 +9,10 @@ import {
   Image,
   Modal,
   Switch,
+  Alert,
+  Platform,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -63,6 +66,7 @@ export default function AdminScreen() {
     phone: restaurant.phone,
     workingHours: restaurant.workingHours,
     deliveryTime: restaurant.deliveryTime,
+    logo: restaurant.logo || '',
   });
 
   const resetForm = () => {
@@ -397,6 +401,7 @@ export default function AdminScreen() {
                     phone: restaurant.phone,
                     workingHours: restaurant.workingHours,
                     deliveryTime: restaurant.deliveryTime,
+                    logo: restaurant.logo || '',
                   });
                   setShowSettingsModal(true);
                 }}
@@ -408,6 +413,12 @@ export default function AdminScreen() {
             
             <View style={styles.settingsCard}>
               <Text style={styles.settingsTitle}>Информация о ресторане</Text>
+              {restaurant.logo && (
+                <View style={styles.settingsItem}>
+                  <Text style={styles.settingsLabel}>Логотип:</Text>
+                  <Image source={{ uri: restaurant.logo }} style={styles.settingsLogo} />
+                </View>
+              )}
               <View style={styles.settingsItem}>
                 <Text style={styles.settingsLabel}>Название:</Text>
                 <Text style={styles.settingsValue}>{restaurant.name}</Text>
@@ -846,6 +857,67 @@ export default function AdminScreen() {
             
             <ScrollView style={styles.modalForm}>
               <View style={styles.fieldContainer}>
+                <Text style={styles.fieldLabel}>Логотип</Text>
+                {restaurantForm.logo ? (
+                  <View style={styles.logoPreviewContainer}>
+                    <Image source={{ uri: restaurantForm.logo }} style={styles.logoPreview} />
+                    <TouchableOpacity
+                      style={styles.changeLogoButton}
+                      onPress={async () => {
+                        if (Platform.OS !== 'web') {
+                          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                          if (status !== 'granted') {
+                            Alert.alert('Ошибка', 'Необходимо разрешение на доступ к галерее');
+                            return;
+                          }
+                        }
+                        
+                        const result = await ImagePicker.launchImageLibraryAsync({
+                          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                          allowsEditing: true,
+                          aspect: [16, 9],
+                          quality: 0.8,
+                        });
+                        
+                        if (!result.canceled && result.assets[0]) {
+                          setRestaurantForm({ ...restaurantForm, logo: result.assets[0].uri });
+                        }
+                      }}
+                    >
+                      <Text style={styles.changeLogoButtonText}>Изменить логотип</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.uploadLogoButton}
+                    onPress={async () => {
+                      if (Platform.OS !== 'web') {
+                        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                        if (status !== 'granted') {
+                          Alert.alert('Ошибка', 'Необходимо разрешение на доступ к галерее');
+                          return;
+                        }
+                      }
+                      
+                      const result = await ImagePicker.launchImageLibraryAsync({
+                        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                        allowsEditing: true,
+                        aspect: [16, 9],
+                        quality: 0.8,
+                      });
+                      
+                      if (!result.canceled && result.assets[0]) {
+                        setRestaurantForm({ ...restaurantForm, logo: result.assets[0].uri });
+                      }
+                    }}
+                  >
+                    <Plus color="#9a4759" size={24} />
+                    <Text style={styles.uploadLogoButtonText}>Загрузить логотип</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              
+              <View style={styles.fieldContainer}>
                 <Text style={styles.fieldLabel}>Название ресторана *</Text>
                 <TextInput
                   style={styles.input}
@@ -1276,6 +1348,51 @@ const styles = StyleSheet.create({
     color: '#666',
     flex: 2,
     textAlign: 'right' as const,
+  },
+  settingsLogo: {
+    width: 120,
+    height: 60,
+    resizeMode: 'contain' as const,
+  },
+  logoPreviewContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  logoPreview: {
+    width: 200,
+    height: 100,
+    resizeMode: 'contain' as const,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  changeLogoButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#9a4759',
+  },
+  changeLogoButtonText: {
+    fontSize: 14,
+    color: '#9a4759',
+    fontWeight: '600' as const,
+  },
+  uploadLogoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderStyle: 'dashed' as const,
+    gap: 12,
+  },
+  uploadLogoButtonText: {
+    fontSize: 16,
+    color: '#9a4759',
+    fontWeight: '600' as const,
   },
   emptyText: {
     fontSize: 16,
