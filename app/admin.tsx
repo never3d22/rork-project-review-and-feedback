@@ -855,37 +855,50 @@ export default function AdminScreen() {
               </TouchableOpacity>
             </View>
             
-            <ScrollView style={styles.modalForm}>
+            <ScrollView style={styles.modalForm} showsVerticalScrollIndicator={false}>
               <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Логотип</Text>
+                <Text style={styles.fieldLabel}>Логотип ресторана</Text>
+                <Text style={styles.fieldHint}>Рекомендуемый размер: 800x400 пикселей</Text>
                 {restaurantForm.logo ? (
                   <View style={styles.logoPreviewContainer}>
                     <Image source={{ uri: restaurantForm.logo }} style={styles.logoPreview} />
-                    <TouchableOpacity
-                      style={styles.changeLogoButton}
-                      onPress={async () => {
-                        if (Platform.OS !== 'web') {
-                          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                          if (status !== 'granted') {
-                            Alert.alert('Ошибка', 'Необходимо разрешение на доступ к галерее');
-                            return;
+                    <View style={styles.logoButtonsContainer}>
+                      <TouchableOpacity
+                        style={styles.changeLogoButton}
+                        onPress={async () => {
+                          if (Platform.OS !== 'web') {
+                            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                            if (status !== 'granted') {
+                              Alert.alert('Ошибка', 'Необходимо разрешение на доступ к галерее');
+                              return;
+                            }
                           }
-                        }
-                        
-                        const result = await ImagePicker.launchImageLibraryAsync({
-                          mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                          allowsEditing: true,
-                          aspect: [16, 9],
-                          quality: 0.8,
-                        });
-                        
-                        if (!result.canceled && result.assets[0]) {
-                          setRestaurantForm({ ...restaurantForm, logo: result.assets[0].uri });
-                        }
-                      }}
-                    >
-                      <Text style={styles.changeLogoButtonText}>Изменить логотип</Text>
-                    </TouchableOpacity>
+                          
+                          const result = await ImagePicker.launchImageLibraryAsync({
+                            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                            allowsEditing: true,
+                            aspect: [16, 9],
+                            quality: 0.8,
+                          });
+                          
+                          if (!result.canceled && result.assets[0]) {
+                            setRestaurantForm({ ...restaurantForm, logo: result.assets[0].uri });
+                          }
+                        }}
+                      >
+                        <Edit3 color="#9a4759" size={18} />
+                        <Text style={styles.changeLogoButtonText}>Изменить</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.removeLogoButton}
+                        onPress={() => {
+                          setRestaurantForm({ ...restaurantForm, logo: '' });
+                        }}
+                      >
+                        <Trash2 color="#ff4444" size={18} />
+                        <Text style={styles.removeLogoButtonText}>Удалить</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ) : (
                   <TouchableOpacity
@@ -911,8 +924,9 @@ export default function AdminScreen() {
                       }
                     }}
                   >
-                    <Plus color="#9a4759" size={24} />
+                    <Plus color="#9a4759" size={32} />
                     <Text style={styles.uploadLogoButtonText}>Загрузить логотип</Text>
+                    <Text style={styles.uploadLogoHint}>Нажмите, чтобы выбрать изображение</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1356,6 +1370,11 @@ const styles = StyleSheet.create({
   },
   logoPreviewContainer: {
     alignItems: 'center',
+    gap: 16,
+    marginTop: 8,
+  },
+  logoButtonsContainer: {
+    flexDirection: 'row',
     gap: 12,
   },
   logoPreview: {
@@ -1367,32 +1386,59 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   changeLogoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#9a4759',
+    backgroundColor: '#fff',
+    gap: 8,
   },
   changeLogoButtonText: {
     fontSize: 14,
     color: '#9a4759',
     fontWeight: '600' as const,
   },
-  uploadLogoButton: {
+  removeLogoButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ff4444',
+    backgroundColor: '#fff',
+    gap: 8,
+  },
+  removeLogoButtonText: {
+    fontSize: 14,
+    color: '#ff4444',
+    fontWeight: '600' as const,
+  },
+  uploadLogoButton: {
+    flexDirection: 'column',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 40,
+    paddingVertical: 50,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: '#9a4759',
     borderStyle: 'dashed' as const,
-    gap: 12,
+    backgroundColor: '#fef5f7',
+    marginTop: 8,
+    gap: 8,
   },
   uploadLogoButtonText: {
     fontSize: 16,
     color: '#9a4759',
     fontWeight: '600' as const,
+  },
+  uploadLogoHint: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
   },
   emptyText: {
     fontSize: 16,
@@ -1468,6 +1514,11 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#333',
     marginBottom: 8,
+  },
+  fieldHint: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 12,
   },
   pickerContainer: {
     marginBottom: 16,
