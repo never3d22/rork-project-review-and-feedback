@@ -1032,6 +1032,17 @@ export default function CartScreen() {
               <TouchableOpacity
                 style={styles.modalButtonConfirm}
                 onPress={() => {
+                  let fullAddress = deliveryAddress;
+                  if (apartment) fullAddress += `, кв. ${apartment}`;
+                  if (entrance) fullAddress += `, подъезд ${entrance}`;
+                  if (floor) fullAddress += `, этаж ${floor}`;
+                  if (intercom) fullAddress += `, домофон ${intercom}`;
+                  if (courierComment) fullAddress += ` (${courierComment})`;
+                  
+                  setDeliveryAddress(fullAddress);
+                  if (user) {
+                    addAddress(fullAddress);
+                  }
                   setShowAddressDetailsModal(false);
                 }}
               >

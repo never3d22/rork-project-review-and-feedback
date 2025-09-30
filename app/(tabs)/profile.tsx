@@ -810,19 +810,6 @@ export default function ProfileScreen() {
                 value={editBirthday}
                 onChangeText={setEditBirthday}
               />
-              
-              <View style={styles.divider} />
-              
-              <TouchableOpacity
-                style={styles.locationButton}
-                onPress={handleGetLocation}
-                disabled={isLoadingLocation}
-              >
-                <Navigation color="#fff" size={18} />
-                <Text style={styles.locationButtonText}>
-                  {isLoadingLocation ? 'Определяем местоположение...' : 'Определить автоматически'}
-                </Text>
-              </TouchableOpacity>
             </ScrollView>
             
             <View style={styles.modalButtons}>
