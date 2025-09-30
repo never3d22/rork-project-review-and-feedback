@@ -498,8 +498,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: {
-    width: 140,
-    height: 70,
+    width: 180,
+    height: 90,
   },
   restaurantInfo: {
     gap: 8,

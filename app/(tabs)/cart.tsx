@@ -131,6 +131,7 @@ export default function CartScreen() {
   const [utensilsCount, setUtensilsCount] = useState(1);
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [isAddressInitialized, setIsAddressInitialized] = useState(false);
   const [deliveryTime, setDeliveryTime] = useState<string>('Сразу');
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
@@ -149,6 +150,13 @@ export default function CartScreen() {
   useEffect(() => {
     setShowSuccessModal(false);
   }, []);
+
+  useEffect(() => {
+    if (user && !isAddressInitialized && user.addresses && user.addresses.length > 0) {
+      setDeliveryAddress(user.addresses[0]);
+      setIsAddressInitialized(true);
+    }
+  }, [user, isAddressInitialized]);
 
   useEffect(() => {
     if (timeLeft > 0 && showVerifyModal) {
