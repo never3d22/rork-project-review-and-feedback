@@ -152,7 +152,7 @@ export default function CartScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
   const [errorMessage, setErrorMessage] = useState('');
-  const [justVerified, setJustVerified] = useState(false);
+
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const insets = useSafeAreaInsets();
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
@@ -365,7 +365,6 @@ export default function CartScreen() {
         setVerificationCode(['', '', '', '', '', '']);
         setErrorMessage('');
         setIsLoading(false);
-        setJustVerified(true);
       } else {
         setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
@@ -464,11 +463,7 @@ export default function CartScreen() {
     }
   };
 
-  useEffect(() => {
-    if (justVerified && user && cart.length > 0) {
-      setJustVerified(false);
-    }
-  }, [justVerified, user, cart.length]);
+
 
   if (cart.length === 0) {
     return (
