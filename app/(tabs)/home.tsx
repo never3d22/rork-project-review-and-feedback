@@ -135,7 +135,7 @@ export default function MenuScreen() {
                       }}
                       activeOpacity={0.8}
                     >
-                      <Minus color="#9a4759" size={16} />
+                      <Minus color="#fff" size={14} />
                     </TouchableOpacity>
                     <Text style={styles.quantityText}>{quantity}</Text>
                     <TouchableOpacity
@@ -146,7 +146,7 @@ export default function MenuScreen() {
                       }}
                       activeOpacity={0.8}
                     >
-                      <Plus color="#9a4759" size={16} />
+                      <Plus color="#fff" size={14} />
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -520,29 +520,32 @@ const styles = StyleSheet.create({
   dishFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    minHeight: 40,
   },
   dishPrice: {
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#9a4759',
     letterSpacing: 0.3,
+    flex: 1,
+    marginRight: 8,
   },
   addButton: {
     backgroundColor: '#9a4759',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#9a4759',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
   },
   categoriesContainer: {
     backgroundColor: '#fff',
@@ -684,39 +687,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 0,
   },
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#9a4759',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  quantityButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
     backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#9a4759',
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    shadowColor: '#9a4759',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
+    minWidth: 90,
+  },
+  quantityButton: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#9a4759',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   quantityText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
+    fontSize: 15,
+    fontWeight: '700' as const,
     color: '#9a4759',
-    marginHorizontal: 8,
-    minWidth: 20,
+    marginHorizontal: 10,
+    minWidth: 18,
     textAlign: 'center' as const,
   },
   visibilityButton: {
