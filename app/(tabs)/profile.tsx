@@ -10,6 +10,7 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -1284,13 +1285,35 @@ export default function ProfileScreen() {
                 onChangeText={setRestaurantWorkingHours}
               />
               
-              <Text style={styles.fieldLabel}>Логотип (URL)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="URL логотипа"
-                value={restaurantLogo}
-                onChangeText={setRestaurantLogo}
-              />
+              <Text style={styles.fieldLabel}>Логотип</Text>
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={async () => {
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    allowsEditing: true,
+                    aspect: [4, 3],
+                    quality: 1,
+                  });
+
+                  if (!result.canceled) {
+                    setRestaurantLogo(result.assets[0].uri);
+                  }
+                }}
+              >
+                <Text style={styles.uploadButtonText}>Выбрать логотип из галереи</Text>
+              </TouchableOpacity>
+              {restaurantLogo ? (
+                <View style={styles.logoPreviewContainer}>
+                  <Image source={{ uri: restaurantLogo }} style={styles.logoPreview} />
+                  <TouchableOpacity
+                    style={styles.removeLogoButton}
+                    onPress={() => setRestaurantLogo('')}
+                  >
+                    <Text style={styles.removeLogoText}>Удалить</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </ScrollView>
             
             <View style={styles.modalButtons}>
@@ -2000,6 +2023,7 @@ const styles = StyleSheet.create({
   },
   formScroll: {
     maxHeight: 400,
+    flexGrow: 0,
   },
   pickerContainer: {
     marginBottom: 16,
@@ -2054,5 +2078,40 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#333',
     marginBottom: 8,
+  },
+  uploadButton: {
+    backgroundColor: '#9a4759',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  uploadButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  logoPreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    marginBottom: 12,
+    resizeMode: 'contain' as const,
+  },
+  removeLogoButton: {
+    backgroundColor: '#ff4444',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  removeLogoText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });
