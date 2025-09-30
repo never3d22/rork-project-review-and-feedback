@@ -8,6 +8,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Image,
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +25,8 @@ import {
   EyeOff,
   Trash2,
   X,
+  GripVertical,
+  Store,
 } from 'lucide-react-native';
 
 import { useRestaurant } from '@/store/restaurant-store';
@@ -31,7 +34,7 @@ import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function ProfileScreen() {
-  const { user, orders, loginAsAdmin, loginAsUser, logout, updateUser, updateOrderStatus, sendSMSCode, verifySMSCode, dishes, addDish, updateDish, deleteDish, toggleDishVisibility, categories, addCategory, deleteCategory } = useRestaurant();
+  const { user, orders, loginAsAdmin, logout, updateUser, updateOrderStatus, sendSMSCode, verifySMSCode, dishes, addDish, updateDish, deleteDish, toggleDishVisibility, categories, addCategory, deleteCategory, reorderCategories, toggleCategoryVisibility, restaurant, updateRestaurant } = useRestaurant();
   const insets = useSafeAreaInsets();
   const [showAdminModal, setShowAdminModal] = useState(false);
 
@@ -43,6 +46,7 @@ export default function ProfileScreen() {
   const [showAddDishModal, setShowAddDishModal] = useState(false);
   const [showEditDishModal, setShowEditDishModal] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [showRestaurantSettingsModal, setShowRestaurantSettingsModal] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [newDishName, setNewDishName] = useState('');
   const [newDishDescription, setNewDishDescription] = useState('');
@@ -51,12 +55,14 @@ export default function ProfileScreen() {
   const [newDishImage, setNewDishImage] = useState('');
   const [newDishWeight, setNewDishWeight] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantAddress, setRestaurantAddress] = useState('');
+  const [restaurantPhone, setRestaurantPhone] = useState('');
+  const [restaurantWorkingHours, setRestaurantWorkingHours] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  const [userPhone, setUserPhone] = useState('');
-  const [userPassword, setUserPassword] = useState('');
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [newAddress, setNewAddress] = useState('');
@@ -140,7 +146,6 @@ export default function ProfileScreen() {
       } else {
         setErrorMessage('Неправильный код. Попробуйте еще раз.');
         setVerificationCode(['', '', '', '', '', '']);
-        // Фокусируемся на первое поле при ошибке
         setTimeout(() => {
           codeInputRefs.current[0]?.focus();
         }, 100);
@@ -163,7 +168,6 @@ export default function ProfileScreen() {
       
       setVerificationCode(newCode);
       
-      // Фокусируемся на следующем пустом поле или последнем
       const nextIndex = Math.min(digits.length, 5);
       setTimeout(() => {
         codeInputRefs.current[nextIndex]?.focus();
@@ -175,7 +179,6 @@ export default function ProfileScreen() {
     newCode[index] = text.replace(/\D/g, '');
     setVerificationCode(newCode);
     
-    // Автоматически переходим к следующему полю
     if (text && index < 5) {
       setTimeout(() => {
         codeInputRefs.current[index + 1]?.focus();
@@ -185,7 +188,6 @@ export default function ProfileScreen() {
 
   const handleCodeKeyPress = (key: string, index: number) => {
     if (key === 'Backspace' && !verificationCode[index] && index > 0) {
-      // Если поле пустое и нажат Backspace, переходим к предыдущему полю
       setTimeout(() => {
         codeInputRefs.current[index - 1]?.focus();
       }, 10);
@@ -193,7 +195,6 @@ export default function ProfileScreen() {
   };
 
   const handleCodeFocus = (index: number) => {
-    // Очищаем текущее поле при фокусе
     const newCode = [...verificationCode];
     newCode[index] = '';
     setVerificationCode(newCode);
@@ -210,7 +211,6 @@ export default function ProfileScreen() {
       setErrorMessage('Не удалось отправить код повторно');
     }
   };
-
 
   
   const handleAdminLogin = () => {
@@ -303,7 +303,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Phone Authentication Modal */}
         <Modal
           visible={showPhoneModal}
           transparent
@@ -355,7 +354,6 @@ export default function ProfileScreen() {
           </View>
         </Modal>
 
-        {/* Verification Code Modal */}
         <Modal
           visible={showVerifyModal}
           transparent
@@ -442,7 +440,6 @@ export default function ProfileScreen() {
           </View>
         </Modal>
 
-        {/* Admin Login Modal */}
         <Modal
           visible={showAdminModal}
           transparent
@@ -588,6 +585,26 @@ export default function ProfileScreen() {
                 <Text style={styles.adminFunctionDescription}>Добавление и редактирование категорий</Text>
               </View>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.adminFunctionCard}
+              onPress={() => {
+                setRestaurantName(restaurant.name);
+                setRestaurantAddress(restaurant.address);
+                setRestaurantPhone(restaurant.phone);
+                setRestaurantWorkingHours(restaurant.workingHours);
+                setShowRestaurantSettingsModal(true);
+              }}
+              activeOpacity={0.9}
+            >
+              <View style={styles.adminFunctionIcon}>
+                <Store color="#9a4759" size={24} />
+              </View>
+              <View style={styles.adminFunctionInfo}>
+                <Text style={styles.adminFunctionTitle}>Настройки ресторана</Text>
+                <Text style={styles.adminFunctionDescription}>Информация о ресторане</Text>
+              </View>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -678,7 +695,6 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Add Address Modal */}
       <Modal
         visible={showAddressModal}
         transparent
@@ -716,7 +732,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Order Details Modal */}
       <Modal
         visible={showOrderModal}
         transparent
@@ -804,7 +819,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Dish Management Modal */}
       <Modal
         visible={showDishManagementModal}
         animationType="slide"
@@ -841,6 +855,7 @@ export default function ProfileScreen() {
           <ScrollView style={styles.managementModalContent}>
             {dishes.map(dish => (
               <View key={dish.id} style={styles.managementItem}>
+                <Image source={{ uri: dish.image }} style={styles.dishThumbnail} />
                 <View style={styles.managementItemInfo}>
                   <Text style={styles.managementItemName}>{dish.name}</Text>
                   <Text style={styles.managementItemDetails}>{dish.category} • {dish.price} ₽</Text>
@@ -893,7 +908,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Category Management Modal */}
       <Modal
         visible={showCategoryManagementModal}
         animationType="slide"
@@ -923,12 +937,27 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           
           <ScrollView style={styles.managementModalContent}>
-            {categories.map(category => (
+            {categories.map((category) => (
               <View key={category.id} style={styles.managementItem}>
+                <TouchableOpacity
+                  style={styles.dragHandle}
+                >
+                  <GripVertical color="#999" size={20} />
+                </TouchableOpacity>
                 <View style={styles.managementItemInfo}>
                   <Text style={styles.managementItemName}>{category.name}</Text>
                 </View>
                 <View style={styles.managementItemActions}>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => toggleCategoryVisibility(category.id)}
+                  >
+                    {category.visible !== false ? (
+                      <Eye color="#fff" size={16} />
+                    ) : (
+                      <EyeOff color="#fff" size={16} />
+                    )}
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.quantityButton}
                     onPress={() => {
@@ -951,7 +980,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Add Dish Modal */}
       <Modal
         visible={showAddDishModal}
         transparent
@@ -963,6 +991,7 @@ export default function ProfileScreen() {
             <Text style={styles.modalTitle}>Добавить блюдо</Text>
             
             <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Название</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Название"
@@ -970,6 +999,7 @@ export default function ProfileScreen() {
                 onChangeText={setNewDishName}
               />
               
+              <Text style={styles.fieldLabel}>Описание</Text>
               <TextInput
                 style={[styles.input, { minHeight: 80 }]}
                 placeholder="Описание"
@@ -979,6 +1009,7 @@ export default function ProfileScreen() {
                 textAlignVertical="top"
               />
               
+              <Text style={styles.fieldLabel}>Цена</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Цена"
@@ -987,6 +1018,7 @@ export default function ProfileScreen() {
                 keyboardType="numeric"
               />
               
+              <Text style={styles.fieldLabel}>Вес</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Вес (например: 250г)"
@@ -994,6 +1026,7 @@ export default function ProfileScreen() {
                 onChangeText={setNewDishWeight}
               />
               
+              <Text style={styles.fieldLabel}>URL изображения</Text>
               <TextInput
                 style={styles.input}
                 placeholder="URL изображения"
@@ -1057,7 +1090,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Edit Dish Modal */}
       <Modal
         visible={showEditDishModal}
         transparent
@@ -1069,6 +1101,7 @@ export default function ProfileScreen() {
             <Text style={styles.modalTitle}>Редактировать блюдо</Text>
             
             <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Название</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Название"
@@ -1076,6 +1109,7 @@ export default function ProfileScreen() {
                 onChangeText={setNewDishName}
               />
               
+              <Text style={styles.fieldLabel}>Описание</Text>
               <TextInput
                 style={[styles.input, { minHeight: 80 }]}
                 placeholder="Описание"
@@ -1085,6 +1119,7 @@ export default function ProfileScreen() {
                 textAlignVertical="top"
               />
               
+              <Text style={styles.fieldLabel}>Цена</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Цена"
@@ -1093,6 +1128,7 @@ export default function ProfileScreen() {
                 keyboardType="numeric"
               />
               
+              <Text style={styles.fieldLabel}>Вес</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Вес (например: 250г)"
@@ -1100,6 +1136,7 @@ export default function ProfileScreen() {
                 onChangeText={setNewDishWeight}
               />
               
+              <Text style={styles.fieldLabel}>URL изображения</Text>
               <TextInput
                 style={styles.input}
                 placeholder="URL изображения"
@@ -1162,7 +1199,6 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Add Category Modal */}
       <Modal
         visible={showAddCategoryModal}
         transparent
@@ -1209,7 +1245,82 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Logout Modal */}
+      <Modal
+        visible={showRestaurantSettingsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRestaurantSettingsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Настройки ресторана</Text>
+            
+            <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Название</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Название ресторана"
+                value={restaurantName}
+                onChangeText={setRestaurantName}
+              />
+              
+              <Text style={styles.fieldLabel}>Адрес</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Адрес"
+                value={restaurantAddress}
+                onChangeText={setRestaurantAddress}
+              />
+              
+              <Text style={styles.fieldLabel}>Телефон</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Телефон"
+                value={restaurantPhone}
+                onChangeText={setRestaurantPhone}
+                keyboardType="phone-pad"
+              />
+              
+              <Text style={styles.fieldLabel}>Часы работы</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Часы работы"
+                value={restaurantWorkingHours}
+                onChangeText={setRestaurantWorkingHours}
+              />
+            </ScrollView>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowRestaurantSettingsModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  if (!restaurantName.trim()) {
+                    Alert.alert('Ошибка', 'Введите название ресторана');
+                    return;
+                  }
+                  updateRestaurant({
+                    name: restaurantName,
+                    address: restaurantAddress,
+                    phone: restaurantPhone,
+                    workingHours: restaurantWorkingHours,
+                  });
+                  setShowRestaurantSettingsModal(false);
+                  Alert.alert('Успех', 'Настройки обновлены');
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Сохранить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal
         visible={showLogoutModal}
         transparent
@@ -1901,5 +2012,22 @@ const styles = StyleSheet.create({
   categoryPillTextActive: {
     color: '#fff',
     fontWeight: '600' as const,
+  },
+  dishThumbnail: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 12,
+    resizeMode: 'cover' as const,
+  },
+  dragHandle: {
+    padding: 8,
+    marginRight: 8,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginBottom: 8,
   },
 });

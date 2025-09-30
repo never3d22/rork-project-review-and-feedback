@@ -264,6 +264,18 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     );
   }, []);
 
+  const reorderCategories = useCallback((newOrder: Category[]) => {
+    setCategories(newOrder);
+  }, []);
+
+  const toggleCategoryVisibility = useCallback((categoryId: string) => {
+    setCategories(prevCategories => 
+      prevCategories.map(category => 
+        category.id === categoryId ? { ...category, visible: category.visible === false ? true : false } : category
+      )
+    );
+  }, []);
+
   const deleteCategory = useCallback((categoryId: string) => {
     setCategories(prevCategories => prevCategories.filter(category => category.id !== categoryId));
   }, []);
@@ -473,6 +485,8 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
+    toggleCategoryVisibility,
     sendSMSCode,
     verifySMSCode,
   };
