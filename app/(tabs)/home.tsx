@@ -106,26 +106,34 @@ export default function MenuScreen() {
           <Text style={[styles.dishDescription, !item.available && styles.dishDescriptionUnavailable]} numberOfLines={2}>
             {item.description}
           </Text>
-          <View style={styles.dishFooter}>
+          
+          <View style={styles.dishPriceRow}>
+            <Text style={[styles.dishWeight, !item.available && styles.dishWeightUnavailable]}>
+              {item.weight || '100г'}
+            </Text>
             <Text style={[styles.dishPrice, !item.available && styles.dishPriceUnavailable]}>{item.price} ₽</Text>
-            <View style={styles.dishActions}>
-              {user?.isAdmin && (
-                <TouchableOpacity
-                  style={styles.visibilityButton}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    toggleDishVisibility(item.id);
-                  }}
-                >
-                  {item.available ? (
-                    <Eye color="#9a4759" size={20} />
-                  ) : (
-                    <EyeOff color="#999" size={20} />
-                  )}
-                </TouchableOpacity>
-              )}
-              {item.available && (
-                quantity > 0 ? (
+          </View>
+          
+          <View style={styles.dishActionsRow}>
+            {user?.isAdmin && (
+              <TouchableOpacity
+                style={styles.visibilityButton}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  toggleDishVisibility(item.id);
+                }}
+              >
+                {item.available ? (
+                  <Eye color="#9a4759" size={20} />
+                ) : (
+                  <EyeOff color="#999" size={20} />
+                )}
+              </TouchableOpacity>
+            )}
+            
+            {item.available && (
+              <View style={styles.dishButtonContainer}>
+                {quantity > 0 ? (
                   <View style={styles.quantityControls}>
                     <TouchableOpacity
                       style={styles.quantityButton}
@@ -160,9 +168,9 @@ export default function MenuScreen() {
                   >
                     <Plus color="#fff" size={20} />
                   </TouchableOpacity>
-                )
-              )}
-            </View>
+                )}
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -517,25 +525,41 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     letterSpacing: 0.2,
   },
-  dishFooter: {
+  dishPriceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    minHeight: 40,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dishWeight: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '500' as const,
+  },
+  dishWeightUnavailable: {
+    color: '#ccc',
   },
   dishPrice: {
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#9a4759',
     letterSpacing: 0.3,
+  },
+  dishActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: 40,
+  },
+  dishButtonContainer: {
     flex: 1,
-    marginRight: 8,
+    alignItems: 'flex-end',
   },
   addButton: {
     backgroundColor: '#9a4759',
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#9a4759',
@@ -683,12 +707,7 @@ const styles = StyleSheet.create({
   dishPriceUnavailable: {
     color: '#999',
   },
-  dishActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexShrink: 0,
-  },
+
   quantityControls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -706,7 +725,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    minWidth: 90,
+    minWidth: 100,
   },
   quantityButton: {
     width: 26,
@@ -734,6 +753,7 @@ const styles = StyleSheet.create({
   },
   visibilityButton: {
     padding: 8,
+    alignSelf: 'flex-start',
   },
   modalContainer: {
     flex: 1,
