@@ -41,7 +41,7 @@ export default function TabLayout() {
         }}
       />
 
-      {user && !user.isAdmin && (
+      {user && (
         <Tabs.Screen
           name="orders"
           options={{
@@ -52,14 +52,6 @@ export default function TabLayout() {
         />
       )}
       {!user && (
-        <Tabs.Screen
-          name="orders"
-          options={{
-            href: null,
-          }}
-        />
-      )}
-      {user?.isAdmin && (
         <Tabs.Screen
           name="orders"
           options={{
