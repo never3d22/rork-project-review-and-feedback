@@ -40,17 +40,15 @@ export default function TabLayout() {
           tabBarBadge: cartItemsCount > 0 ? cartItemsCount : undefined,
         }}
       />
-      {user?.isAdmin && (
-        <Tabs.Screen
-          name="orders"
-          options={{
-            title: "Заказы",
-            tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
-            tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
-            href: user?.isAdmin ? '/(tabs)/orders' : null,
-          }}
-        />
-      )}
+      <Tabs.Screen
+        name="orders"
+        options={{
+          title: "Заказы",
+          tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
+          tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
+          href: user?.isAdmin ? '/(tabs)/orders' : null,
+        }}
+      />
       <Tabs.Screen
         name="profile"
         options={{

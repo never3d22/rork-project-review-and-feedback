@@ -306,14 +306,18 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       const SMS_API_ID = process.env.EXPO_PUBLIC_SMS_API_ID || '457A5DBA-D814-BC10-DDD7-645DC659658E';
       const message = `Ваш код подтверждения: ${code}`;
       
-      console.log(`Отправляем SMS на номер ${phone} с кодом: ${code}`);
+      console.log(`\n========================================`);
+      console.log(`📱 ОТПРАВКА SMS`);
+      console.log(`Номер: ${phone}`);
+      console.log(`Код: ${code}`);
+      console.log(`========================================\n`);
       
       // Получаем IP адрес пользователя
       const userIP = await getUserIP();
       console.log('IP адрес пользователя:', userIP);
       
       // Форматируем номер для SMS.ru (должен начинаться с 7)
-      const formattedPhone = phone.startsWith('8') ? '7' + phone.slice(1) : phone;
+      const formattedPhone = phone.startsWith('8') ? '7' + phone.slice(1) : phone.startsWith('7') ? phone : '7' + phone;
       
       // Отправляем SMS через SMS.ru API с IP адресом
       let smsUrl = `https://sms.ru/sms/send?api_id=${SMS_API_ID}&to=${formattedPhone}&msg=${encodeURIComponent(message)}&json=1`;
@@ -323,7 +327,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         smsUrl += `&ip=${userIP}`;
       }
       
-      console.log('Отправляем запрос на:', smsUrl);
+      console.log('Отправляем запрос на SMS.ru...');
       
       const response = await fetch(smsUrl, {
         method: 'GET',
@@ -336,31 +340,26 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('Ответ от SMS.ru:', result);
+        console.log('Ответ от SMS.ru:', JSON.stringify(result, null, 2));
         
         if (result.status === 'OK') {
-          console.log('SMS успешно отправлено!');
+          console.log('✅ SMS успешно отправлено!');
           return true;
         } else {
-          console.error('Ошибка SMS.ru:', result.status_text || result.status);
-          // В случае ошибки API показываем код в консоли для тестирования
-          console.log(`[FALLBACK] SMS код для тестирования: ${code}`);
+          console.error('❌ Ошибка SMS.ru:', result.status_text || result.status);
+          console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
           return true;
         }
       } else {
-        console.error('HTTP ошибка:', response.status, response.statusText);
-        // В случае HTTP ошибки показываем код в консоли для тестирования
-        console.log(`[FALLBACK] SMS код для тестирования: ${code}`);
+        console.error('❌ HTTP ошибка:', response.status, response.statusText);
+        console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
         return true;
       }
       
     } catch (error) {
-      console.error('Ошибка при отправке SMS:', error);
-      
-      // Fallback: показываем код в консоли
-      console.log(`[ERROR FALLBACK] SMS код для ${phone}: ${code}`);
-      console.log('Произошла ошибка при отправке SMS. Используйте код из консоли.');
-      return true; // Возвращаем true чтобы пользователь мог продолжить
+      console.error('❌ Ошибка при отправке SMS:', error);
+      console.log(`\n⚠️ [ДЕМО РЕЖИМ] Используйте код из консоли: ${code}\n`);
+      return true;
     }
   }, [getUserIP]);
 

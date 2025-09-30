@@ -775,12 +775,25 @@ export default function ProfileScreen() {
                   </View>
                 </ScrollView>
                 
-                <TouchableOpacity
-                  style={styles.modalButtonConfirm}
-                  onPress={() => setShowOrderModal(false)}
-                >
-                  <Text style={styles.modalButtonConfirmText}>Закрыть</Text>
-                </TouchableOpacity>
+                <View style={styles.modalButtons}>
+                  {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+                    <TouchableOpacity
+                      style={[styles.modalButtonCancel, { borderColor: '#ff4444' }]}
+                      onPress={() => {
+                        cancelOrder(selectedOrder.id, 'Отменен пользователем');
+                        setShowOrderModal(false);
+                      }}
+                    >
+                      <Text style={[styles.modalButtonCancelText, { color: '#ff4444' }]}>Отменить заказ</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity
+                    style={[styles.modalButtonConfirm, selectedOrder.status === 'cancelled' || selectedOrder.status === 'delivered' ? { flex: 1 } : {}]}
+                    onPress={() => setShowOrderModal(false)}
+                  >
+                    <Text style={styles.modalButtonConfirmText}>Закрыть</Text>
+                  </TouchableOpacity>
+                </View>
               </>
             )}
           </View>
