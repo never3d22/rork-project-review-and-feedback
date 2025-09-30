@@ -27,6 +27,8 @@ import {
   X,
   GripVertical,
   Store,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react-native';
 
 import { useRestaurant } from '@/store/restaurant-store';
@@ -55,6 +57,7 @@ export default function ProfileScreen() {
   const [newDishImage, setNewDishImage] = useState('');
   const [newDishWeight, setNewDishWeight] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
   const [restaurantName, setRestaurantName] = useState('');
   const [restaurantAddress, setRestaurantAddress] = useState('');
   const [restaurantPhone, setRestaurantPhone] = useState('');
@@ -937,13 +940,36 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           
           <ScrollView style={styles.managementModalContent}>
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <View key={category.id} style={styles.managementItem}>
-                <TouchableOpacity
-                  style={styles.dragHandle}
-                >
-                  <GripVertical color="#999" size={20} />
-                </TouchableOpacity>
+                <View style={styles.dragHandleContainer}>
+                  <TouchableOpacity
+                    style={styles.dragHandleButton}
+                    onPress={() => {
+                      if (index > 0) {
+                        const newCategories = [...categories];
+                        [newCategories[index], newCategories[index - 1]] = [newCategories[index - 1], newCategories[index]];
+                        reorderCategories(newCategories);
+                      }
+                    }}
+                    disabled={index === 0}
+                  >
+                    <ChevronUp color={index === 0 ? "#ccc" : "#666"} size={20} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.dragHandleButton}
+                    onPress={() => {
+                      if (index < categories.length - 1) {
+                        const newCategories = [...categories];
+                        [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
+                        reorderCategories(newCategories);
+                      }
+                    }}
+                    disabled={index === categories.length - 1}
+                  >
+                    <ChevronDown color={index === categories.length - 1 ? "#ccc" : "#666"} size={20} />
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.managementItemInfo}>
                   <Text style={styles.managementItemName}>{category.name}</Text>
                 </View>
@@ -2023,6 +2049,13 @@ const styles = StyleSheet.create({
   dragHandle: {
     padding: 8,
     marginRight: 8,
+  },
+  dragHandleContainer: {
+    flexDirection: 'column',
+    marginRight: 8,
+  },
+  dragHandleButton: {
+    padding: 2,
   },
   fieldLabel: {
     fontSize: 14,

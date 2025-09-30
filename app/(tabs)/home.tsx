@@ -19,7 +19,7 @@ import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function MenuScreen() {
-  const { dishes, addToCart, updateQuantity, cart, restaurant, user, toggleDishVisibility, orders } = useRestaurant();
+  const { dishes, addToCart, updateQuantity, cart, restaurant, user, toggleDishVisibility, orders, categories } = useRestaurant();
   const [selectedCategory, setSelectedCategory] = useState<string>('Все');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
   const [showDishModal, setShowDishModal] = useState<boolean>(false);
@@ -238,7 +238,7 @@ export default function MenuScreen() {
               <TouchableOpacity
                 key={order.id}
                 style={styles.adminOrderCard}
-                onPress={() => router.push('/admin')}
+                onPress={() => router.push('/(tabs)/profile')}
                 activeOpacity={0.9}
               >
                 <View style={styles.adminOrderHeader}>
@@ -283,20 +283,20 @@ export default function MenuScreen() {
           contentContainerStyle={styles.categoriesScrollContent}
           style={styles.categoriesScroll}
         >
-          {CATEGORIES.map(category => (
+          {categories.filter(cat => cat.visible !== false).map(category => (
             <TouchableOpacity
-              key={category}
+              key={category.id}
               style={[
                 styles.categoryButton,
-                selectedCategory === category && styles.categoryButtonActive
+                selectedCategory === category.name && styles.categoryButtonActive
               ]}
-              onPress={() => setSelectedCategory(category)}
+              onPress={() => setSelectedCategory(category.name)}
               activeOpacity={0.8}
             >
               <Text style={[
                 styles.categoryButtonText,
-                selectedCategory === category && styles.categoryButtonTextActive
-              ]}>{category}</Text>
+                selectedCategory === category.name && styles.categoryButtonTextActive
+              ]}>{category.name}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -366,22 +366,22 @@ export default function MenuScreen() {
               ]}>Все категории</Text>
             </TouchableOpacity>
             
-            {CATEGORIES.map(category => (
+            {categories.filter(cat => cat.visible !== false).map(category => (
               <TouchableOpacity
-                key={category}
+                key={category.id}
                 style={[
                   styles.categoryModalItem,
-                  selectedCategory === category && styles.categoryModalItemActive
+                  selectedCategory === category.name && styles.categoryModalItemActive
                 ]}
                 onPress={() => {
-                  setSelectedCategory(category);
+                  setSelectedCategory(category.name);
                   setShowCategoryModal(false);
                 }}
               >
                 <Text style={[
                   styles.categoryModalItemText,
-                  selectedCategory === category && styles.categoryModalItemTextActive
-                ]}>{category}</Text>
+                  selectedCategory === category.name && styles.categoryModalItemTextActive
+                ]}>{category.name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
