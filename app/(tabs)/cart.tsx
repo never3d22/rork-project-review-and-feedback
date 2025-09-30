@@ -35,7 +35,7 @@ import {
 import { useRestaurant } from '@/store/restaurant-store';
 import { CartItem } from '@/types/restaurant';
 
-type PaymentMethod = 'card' | 'cash' | 'online';
+type PaymentMethod = 'card' | 'sberpay' | 'cash' | 'sbp';
 
 interface SwipeableCartItemProps {
   item: CartItem;
@@ -278,8 +278,9 @@ export default function CartScreen() {
 
   const paymentOptions = [
     { id: 'card' as PaymentMethod, title: 'Банковская карта', icon: CreditCard },
+    { id: 'sberpay' as PaymentMethod, title: 'SberPay', icon: Smartphone },
     { id: 'cash' as PaymentMethod, title: 'Наличные', icon: Banknote },
-    { id: 'online' as PaymentMethod, title: 'Онлайн оплата', icon: Smartphone },
+    { id: 'sbp' as PaymentMethod, title: 'СБП', icon: CreditCard },
   ];
 
   const getDeliveryTimes = () => {

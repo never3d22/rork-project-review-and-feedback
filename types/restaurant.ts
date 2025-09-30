@@ -21,7 +21,7 @@ export interface Order {
   total: number;
   utensils: boolean;
   utensilsCount: number;
-  paymentMethod: 'card' | 'cash' | 'online';
+  paymentMethod: 'card' | 'sberpay' | 'cash' | 'sbp';
   deliveryType: 'pickup' | 'delivery';
   deliveryAddress?: string;
   deliveryTime?: string;
