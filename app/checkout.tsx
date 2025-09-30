@@ -39,18 +39,23 @@ export default function CheckoutScreen() {
   ];
 
   const handlePlaceOrder = () => {
+    console.log('handlePlaceOrder called, cart length:', cart.length);
+    
     if (cart.length === 0) {
+      console.log('Cart is empty, showing error');
       setShowErrorModal(true);
       return;
     }
 
     // Проверяем аутентификацию пользователя
     if (!user) {
+      console.log('User not authenticated, redirecting to auth');
       router.push('/auth/phone' as any);
       return;
     }
 
     try {
+      console.log('Creating order...');
       if (deliveryAddress && deliveryAddress.trim()) {
         addAddress(deliveryAddress.trim());
       }
@@ -66,6 +71,7 @@ export default function CheckoutScreen() {
         deliveryAddress: deliveryAddress || undefined,
       });
       
+      console.log('Order created successfully, ID:', newOrderId);
       setOrderId(newOrderId);
       setShowSuccessModal(true);
     } catch (error) {
