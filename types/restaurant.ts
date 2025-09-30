@@ -26,13 +26,16 @@ export interface Order {
   deliveryAddress?: string;
   deliveryTime?: string;
   comments: string;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled' | 'paid';
   createdAt: Date;
   cancelReason?: string;
   cancelledAt?: Date;
   userId?: string;
   userName?: string;
   userPhone?: string;
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentId?: string;
+  paymentUrl?: string;
 }
 
 export interface User {

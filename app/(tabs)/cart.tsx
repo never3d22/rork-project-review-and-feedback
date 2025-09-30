@@ -24,7 +24,6 @@ import {
   Utensils, 
   Truck, 
   MapPin, 
-  Clock, 
   CreditCard, 
   Banknote, 
   Smartphone, 
@@ -127,7 +126,6 @@ export default function CartScreen() {
   const { cart, updateQuantity, removeFromCart, clearCart, getCartTotal, restaurant, dishes, addToCart, createOrder, user, sendSMSCode, verifySMSCode, addAddress } = useRestaurant();
   const [showClearModal, setShowClearModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [orderId, setOrderId] = useState('');
@@ -145,8 +143,6 @@ export default function CartScreen() {
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [comments, setComments] = useState('');
-  const [userPhone, setUserPhone] = useState('');
-  const [userPassword, setUserPassword] = useState('');
   const [authPhone, setAuthPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
@@ -423,45 +419,59 @@ export default function CartScreen() {
     }
   };
 
-  const processPayment = async (orderId: string): Promise<{ success: boolean; error?: string }> => {
+  const processPayment = async (orderId: string): Promise<{ success: boolean; error?: string; paymentUrl?: string; paymentId?: string }> => {
+    console.log(`\n========================================`);
+    console.log(`💳 ОБРАБОТКА ПЛАТЕЖА`);
+    console.log(`Заказ: ${orderId}`);
+    console.log(`Способ оплаты: ${paymentMethod}`);
+    console.log(`Сумма: ${getCartTotal()} ₽`);
+    console.log(`========================================\n`);
+
     if (paymentMethod === 'cash') {
+      console.log('✅ Оплата наличными - не требует обработки');
       return { success: true };
     }
 
     if (paymentMethod === 'card') {
       const stripeKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
       if (!stripeKey) {
+        console.error('❌ Stripe API ключ не настроен');
         return { 
           success: false, 
-          error: 'Ошибка: API ключ Stripe не настроен. Добавьте EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY в .env файл' 
+          error: 'Ошибка: API ключ Stripe не настроен.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_ваш_ключ\n\nПолучить ключи: https://dashboard.stripe.com/apikeys' 
         };
       }
 
       try {
-        console.log('Processing card payment with Stripe...');
+        console.log('🔄 Обработка оплаты картой через Stripe...');
+        console.log('API Key:', stripeKey.substring(0, 20) + '...');
+        
         return { 
           success: false, 
-          error: 'Интеграция Stripe в процессе настройки. Используйте другой способ оплаты.' 
+          error: 'Интеграция Stripe требует установки @stripe/stripe-react-native.\n\nВыполните:\nbun expo install @stripe/stripe-react-native\n\nИли используйте другой способ оплаты.' 
         };
       } catch (error) {
+        console.error('❌ Ошибка Stripe:', error);
         return { success: false, error: 'Ошибка при оплате картой' };
       }
     }
 
     if (paymentMethod === 'sberpay') {
-      const merchantId = process.env.EXPO_PUBLIC_SBER_MERCHANT_ID;
-      const username = process.env.SBER_API_USERNAME;
-      const password = process.env.SBER_API_PASSWORD;
+      const username = process.env.EXPO_PUBLIC_SBER_API_USERNAME;
+      const password = process.env.EXPO_PUBLIC_SBER_API_PASSWORD;
 
-      if (!merchantId || !username || !password) {
+      if (!username || !password) {
+        console.error('❌ SberPay API ключи не настроены');
         return { 
           success: false, 
-          error: 'Ошибка: API ключи SberPay не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_SBER_MERCHANT_ID\nSBER_API_USERNAME\nSBER_API_PASSWORD' 
+          error: 'Ошибка: API ключи SberPay не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_SBER_API_USERNAME=ваш_username\nEXPO_PUBLIC_SBER_API_PASSWORD=ваш_password\n\nПолучить доступ: https://securepayments.sberbank.ru/' 
         };
       }
 
       try {
-        console.log('Processing SberPay payment...');
+        console.log('🔄 Обработка оплаты через SberPay...');
+        console.log('Username:', username);
+        
         const response = await fetch('https://securepayments.sberbank.ru/payment/rest/register.do', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -472,43 +482,55 @@ export default function CartScreen() {
             amount: getCartTotal() * 100,
             returnUrl: 'myapp://payment-success',
             failUrl: 'myapp://payment-failed',
+            description: `Заказ №${orderId}`,
           })
         });
 
+        console.log('Статус ответа:', response.status);
         const data = await response.json();
+        console.log('Ответ от SberPay:', JSON.stringify(data, null, 2));
         
         if (data.errorCode) {
+          console.error('❌ Ошибка SberPay:', data.errorMessage);
           return { 
             success: false, 
-            error: `Ошибка SberPay: ${data.errorMessage || 'Неизвестная ошибка'}` 
+            error: `Ошибка SberPay (код ${data.errorCode}): ${data.errorMessage || 'Неизвестная ошибка'}` 
           };
         }
 
-        if (data.formUrl) {
-          console.log('SberPay payment URL:', data.formUrl);
-          return { success: true };
+        if (data.formUrl && data.orderId) {
+          console.log('✅ Ссылка для оплаты получена:', data.formUrl);
+          console.log('ID платежа:', data.orderId);
+          return { 
+            success: true, 
+            paymentUrl: data.formUrl,
+            paymentId: data.orderId 
+          };
         }
 
         return { success: false, error: 'Не удалось получить ссылку для оплаты' };
       } catch (error) {
-        console.error('SberPay error:', error);
-        return { success: false, error: 'Ошибка при подключении к SberPay' };
+        console.error('❌ Ошибка подключения к SberPay:', error);
+        return { success: false, error: 'Ошибка при подключении к SberPay. Проверьте интернет-соединение.' };
       }
     }
 
     if (paymentMethod === 'sbp') {
       const terminalKey = process.env.EXPO_PUBLIC_TINKOFF_TERMINAL_KEY;
-      const secretKey = process.env.TINKOFF_SECRET_KEY;
+      const secretKey = process.env.EXPO_PUBLIC_TINKOFF_SECRET_KEY;
 
       if (!terminalKey || !secretKey) {
+        console.error('❌ СБП API ключи не настроены');
         return { 
           success: false, 
-          error: 'Ошибка: API ключи СБП не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_TINKOFF_TERMINAL_KEY\nTINKOFF_SECRET_KEY\n\nИли используйте другой банк (ЮKassa, Сбербанк)' 
+          error: 'Ошибка: API ключи СБП не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_TINKOFF_TERMINAL_KEY=ваш_terminal_key\nEXPO_PUBLIC_TINKOFF_SECRET_KEY=ваш_secret_key\n\nПолучить доступ: https://www.tinkoff.ru/kassa/\n\nИли используйте ЮKassa: https://yookassa.ru/' 
         };
       }
 
       try {
-        console.log('Processing SBP payment via Tinkoff...');
+        console.log('🔄 Обработка оплаты через СБП (Тинькофф)...');
+        console.log('Terminal Key:', terminalKey.substring(0, 20) + '...');
+        
         const response = await fetch('https://securepay.tinkoff.ru/v2/Init', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -523,24 +545,32 @@ export default function CartScreen() {
           })
         });
 
+        console.log('Статус ответа:', response.status);
         const data = await response.json();
+        console.log('Ответ от Тинькофф:', JSON.stringify(data, null, 2));
         
         if (!data.Success) {
+          console.error('❌ Ошибка СБП:', data.Message || data.Details);
           return { 
             success: false, 
             error: `Ошибка СБП: ${data.Message || data.Details || 'Неизвестная ошибка'}` 
           };
         }
 
-        if (data.PaymentURL) {
-          console.log('SBP payment URL:', data.PaymentURL);
-          return { success: true };
+        if (data.PaymentURL && data.PaymentId) {
+          console.log('✅ Ссылка для оплаты получена:', data.PaymentURL);
+          console.log('ID платежа:', data.PaymentId);
+          return { 
+            success: true, 
+            paymentUrl: data.PaymentURL,
+            paymentId: data.PaymentId 
+          };
         }
 
         return { success: false, error: 'Не удалось получить ссылку для оплаты через СБП' };
       } catch (error) {
-        console.error('SBP error:', error);
-        return { success: false, error: 'Ошибка при подключении к системе СБП' };
+        console.error('❌ Ошибка подключения к СБП:', error);
+        return { success: false, error: 'Ошибка при подключении к системе СБП. Проверьте интернет-соединение.' };
       }
     }
 
@@ -567,12 +597,16 @@ export default function CartScreen() {
       
       const tempOrderId = `ORD-${Date.now()}`;
       
+      console.log('\n🛒 Начинаем оформление заказа...');
       const paymentResult = await processPayment(tempOrderId);
       
       if (!paymentResult.success) {
+        console.error('❌ Оплата не прошла:', paymentResult.error);
         alert(paymentResult.error || 'Ошибка при оплате');
         return;
       }
+      
+      console.log('✅ Оплата успешна, создаем заказ...');
       
       const newOrderId = createOrder({
         items: cart,
@@ -586,14 +620,28 @@ export default function CartScreen() {
         comments,
       });
       
+      console.log('✅ Заказ создан:', newOrderId);
+      
+      if (paymentResult.paymentUrl) {
+        console.log('🔗 Открываем ссылку для оплаты:', paymentResult.paymentUrl);
+        if (Platform.OS === 'web') {
+          window.open(paymentResult.paymentUrl, '_blank');
+        } else {
+          const WebBrowser = await import('expo-web-browser');
+          await WebBrowser.openBrowserAsync(paymentResult.paymentUrl);
+        }
+      }
+      
       setOrderId(newOrderId);
       setShowSuccessModal(true);
       clearCart();
       setDeliveryAddress('');
       setComments('');
+      
+      console.log('✅ Заказ успешно оформлен!\n');
     } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Ошибка при оформлении заказа');
+      console.error('❌ Ошибка при оформлении заказа:', error);
+      alert('Ошибка при оформлении заказа. Попробуйте еще раз.');
     }
   };
 
