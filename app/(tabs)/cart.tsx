@@ -146,6 +146,10 @@ export default function CartScreen() {
   const codeInputRefs = useRef<(TextInput | null)[]>([]);
 
   useEffect(() => {
+    setShowSuccessModal(false);
+  }, []);
+
+  useEffect(() => {
     if (timeLeft > 0 && showVerifyModal) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);

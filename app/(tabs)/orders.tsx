@@ -12,7 +12,7 @@ import { useRestaurant } from '@/store/restaurant-store';
 import { Order } from '@/types/restaurant';
 
 export default function OrdersScreen() {
-  const { orders, updateOrderStatus, user } = useRestaurant();
+  const { orders, updateOrderStatus, cancelOrder, user } = useRestaurant();
   const insets = useSafeAreaInsets();
 
   if (!user?.isAdmin) {
@@ -85,31 +85,58 @@ export default function OrdersScreen() {
       {order.status !== 'delivered' && order.status !== 'cancelled' && (
         <View style={styles.orderActions}>
           {order.status === 'pending' && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.preparingButton]}
-              onPress={() => updateOrderStatus(order.id, 'preparing')}
-            >
-              <Clock color="#fff" size={18} />
-              <Text style={styles.actionButtonText}>Готовить</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.preparingButton]}
+                onPress={() => updateOrderStatus(order.id, 'preparing')}
+              >
+                <Clock color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Готовить</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => cancelOrder(order.id)}
+              >
+                <XCircle color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Отменить</Text>
+              </TouchableOpacity>
+            </>
           )}
           {order.status === 'preparing' && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.readyButton]}
-              onPress={() => updateOrderStatus(order.id, 'ready')}
-            >
-              <Package color="#fff" size={18} />
-              <Text style={styles.actionButtonText}>Готов</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.readyButton]}
+                onPress={() => updateOrderStatus(order.id, 'ready')}
+              >
+                <Package color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Готов</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => cancelOrder(order.id)}
+              >
+                <XCircle color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Отменить</Text>
+              </TouchableOpacity>
+            </>
           )}
           {order.status === 'ready' && (
-            <TouchableOpacity
-              style={[styles.actionButton, styles.deliveredButton]}
-              onPress={() => updateOrderStatus(order.id, 'delivered')}
-            >
-              <CheckCircle color="#fff" size={18} />
-              <Text style={styles.actionButtonText}>Выдан</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deliveredButton]}
+                onPress={() => updateOrderStatus(order.id, 'delivered')}
+              >
+                <CheckCircle color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Выдан</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={() => cancelOrder(order.id)}
+              >
+                <XCircle color="#fff" size={18} />
+                <Text style={styles.actionButtonText}>Отменить</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       )}
@@ -353,6 +380,9 @@ const styles = StyleSheet.create({
   },
   deliveredButton: {
     backgroundColor: '#9E9E9E',
+  },
+  cancelButton: {
+    backgroundColor: '#F44336',
   },
   actionButtonText: {
     color: '#fff',
