@@ -802,6 +802,16 @@ export default function ProfileScreen() {
               autoCapitalize="none"
             />
             
+            <Text style={styles.fieldLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Введите email"
+              value={editEmail}
+              onChangeText={setEditEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            
             <Text style={styles.fieldLabel}>Дата рождения</Text>
             <TextInput
               style={styles.input}

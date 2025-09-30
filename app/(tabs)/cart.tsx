@@ -135,6 +135,12 @@ export default function CartScreen() {
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [isAddressInitialized, setIsAddressInitialized] = useState(false);
+  const [showAddressDetailsModal, setShowAddressDetailsModal] = useState(false);
+  const [apartment, setApartment] = useState('');
+  const [entrance, setEntrance] = useState('');
+  const [intercom, setIntercom] = useState('');
+  const [floor, setFloor] = useState('');
+  const [courierComment, setCourierComment] = useState('');
   const [deliveryTime, setDeliveryTime] = useState<string>('Сразу');
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
@@ -580,6 +586,13 @@ export default function CartScreen() {
               multiline
             />
             
+            <TouchableOpacity
+              style={styles.addressIncorrectButton}
+              onPress={() => setShowAddressDetailsModal(true)}
+            >
+              <Text style={styles.addressIncorrectText}>Адрес не верен</Text>
+            </TouchableOpacity>
+            
             <View style={styles.timeSection}>
               <Text style={styles.timeEstimate}>В течение {restaurant.deliveryMinTime}-{restaurant.deliveryMaxTime} минут</Text>
               <TouchableOpacity
@@ -939,6 +952,92 @@ export default function CartScreen() {
             >
               <Text style={styles.modalButtonConfirmText}>Отлично!</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showAddressDetailsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddressDetailsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Детали адреса</Text>
+            
+            <ScrollView style={styles.formScroll}>
+              <Text style={styles.fieldLabel}>Адрес</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Улица, дом"
+                value={deliveryAddress}
+                onChangeText={setDeliveryAddress}
+                multiline
+              />
+              
+              <Text style={styles.fieldLabel}>Квартира</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Номер квартиры"
+                value={apartment}
+                onChangeText={setApartment}
+                keyboardType="numeric"
+              />
+              
+              <Text style={styles.fieldLabel}>Подъезд</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Номер подъезда"
+                value={entrance}
+                onChangeText={setEntrance}
+                keyboardType="numeric"
+              />
+              
+              <Text style={styles.fieldLabel}>Домофон</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Код домофона"
+                value={intercom}
+                onChangeText={setIntercom}
+              />
+              
+              <Text style={styles.fieldLabel}>Этаж</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Номер этажа"
+                value={floor}
+                onChangeText={setFloor}
+                keyboardType="numeric"
+              />
+              
+              <Text style={styles.fieldLabel}>Комментарий для курьера</Text>
+              <TextInput
+                style={[styles.input, { minHeight: 80 }]}
+                placeholder="Дополнительная информация для курьера"
+                value={courierComment}
+                onChangeText={setCourierComment}
+                multiline
+                textAlignVertical="top"
+              />
+            </ScrollView>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowAddressDetailsModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  setShowAddressDetailsModal(false);
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Сохранить</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1624,5 +1723,30 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600' as const,
+  },
+  addressIncorrectButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ff4444',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  addressIncorrectText: {
+    color: '#ff4444',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginBottom: 8,
+  },
+  formScroll: {
+    maxHeight: 400,
+    flexGrow: 0,
   },
 });
