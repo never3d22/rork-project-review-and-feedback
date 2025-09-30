@@ -522,18 +522,6 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {user.isAdmin && (
-          <View style={styles.adminSection}>
-            <Text style={styles.adminSectionTitle}>Администрирование</Text>
-            <TouchableOpacity
-              style={styles.adminPanel}
-              onPress={() => router.push('/admin' as any)}
-            >
-              <Settings color="#9a4759" size={24} />
-              <Text style={styles.adminPanelText}>Перейти в админ панель</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {!user.isAdmin && (
           <View style={styles.section}>

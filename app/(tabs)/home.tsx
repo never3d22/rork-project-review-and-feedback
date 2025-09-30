@@ -171,7 +171,8 @@ export default function MenuScreen() {
                     }}
                     activeOpacity={0.8}
                   >
-                    <Plus color="#fff" size={20} />
+                    <Plus color="#fff" size={16} />
+                    <Text style={styles.addButtonText}>В корзину</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -619,11 +620,12 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: '#9a4759',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
     shadowColor: '#9a4759',
     shadowOffset: {
       width: 0,
@@ -632,6 +634,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 5,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
   categoriesContainer: {
     backgroundColor: '#fff',
