@@ -221,7 +221,7 @@ export default function MenuScreen() {
         {currentOrder && !user?.isAdmin && (
           <TouchableOpacity 
             style={styles.orderStatusBlock}
-            onPress={() => router.push('/(tabs)/profile')}
+            onPress={() => router.push('/(tabs)/orders')}
             activeOpacity={0.9}
           >
             <View style={styles.orderStatusContent}>

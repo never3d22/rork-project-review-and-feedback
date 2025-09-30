@@ -71,6 +71,18 @@ export default function OrdersScreen() {
           <Text style={styles.orderTotal}>{order.total} ₽</Text>
         </View>
 
+        {isAdmin && (order.userName || order.userPhone) && (
+          <View style={styles.customerInfo}>
+            <Text style={styles.customerInfoTitle}>Контакты клиента:</Text>
+            {order.userName && (
+              <Text style={styles.customerInfoText}>👤 {order.userName}</Text>
+            )}
+            {order.userPhone && (
+              <Text style={styles.customerInfoText}>📱 {order.userPhone}</Text>
+            )}
+          </View>
+        )}
+
         {order.deliveryAddress && (
           <View style={styles.deliveryInfo}>
             <Text style={styles.deliveryLabel}>Адрес доставки:</Text>
@@ -503,6 +515,24 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold' as const,
     color: '#9a4759',
+  },
+  customerInfo: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  customerInfoTitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#666',
+    marginBottom: 8,
+  },
+  customerInfoText: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+    fontWeight: '500' as const,
   },
   orderItems: {
     marginBottom: 16,

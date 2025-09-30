@@ -31,6 +31,8 @@ export interface Order {
   cancelReason?: string;
   cancelledAt?: Date;
   userId?: string;
+  userName?: string;
+  userPhone?: string;
 }
 
 export interface User {

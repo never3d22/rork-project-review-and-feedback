@@ -175,6 +175,8 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       status: 'pending',
       createdAt: new Date(),
       userId: user?.id,
+      userName: user?.name,
+      userPhone: user?.phone,
     };
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
