@@ -25,7 +25,7 @@ import {
   EyeOff,
   Trash2,
   X,
-  GripVertical,
+
   Store,
   ChevronUp,
   ChevronDown,
@@ -36,7 +36,7 @@ import { CATEGORIES } from '@/constants/dishes';
 import { Dish } from '@/types/restaurant';
 
 export default function ProfileScreen() {
-  const { user, orders, loginAsAdmin, logout, updateUser, updateOrderStatus, sendSMSCode, verifySMSCode, dishes, addDish, updateDish, deleteDish, toggleDishVisibility, categories, addCategory, deleteCategory, reorderCategories, toggleCategoryVisibility, restaurant, updateRestaurant } = useRestaurant();
+  const { user, orders, loginAsAdmin, logout, updateUser, updateOrderStatus, cancelOrder, sendSMSCode, verifySMSCode, dishes, addDish, updateDish, deleteDish, toggleDishVisibility, categories, addCategory, deleteCategory, reorderCategories, toggleCategoryVisibility, restaurant, updateRestaurant } = useRestaurant();
   const insets = useSafeAreaInsets();
   const [showAdminModal, setShowAdminModal] = useState(false);
 
@@ -57,7 +57,7 @@ export default function ProfileScreen() {
   const [newDishImage, setNewDishImage] = useState('');
   const [newDishWeight, setNewDishWeight] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+
   const [restaurantName, setRestaurantName] = useState('');
   const [restaurantAddress, setRestaurantAddress] = useState('');
   const [restaurantPhone, setRestaurantPhone] = useState('');
@@ -620,78 +620,108 @@ export default function ProfileScreen() {
           </View>
           
           {orders.length > 0 ? (
-            orders.map(order => (
-              <TouchableOpacity 
-                key={order.id} 
-                style={styles.orderCard}
-                onPress={() => handleViewOrder(order)}
-                activeOpacity={0.9}
-              >
-                <View style={styles.orderHeader}>
-                  <Text style={styles.orderId}>Заказ #{order.id}</Text>
-                  <TouchableOpacity
-                    style={styles.viewOrderButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleViewOrder(order);
-                    }}
-                  >
-                    <Eye color="#9a4759" size={16} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.orderDate}>
-                  {new Date(order.createdAt).toLocaleDateString('ru-RU')}
-                </Text>
-                <Text style={styles.orderTotal}>{order.total} ₽</Text>
-                <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) }]}>
-                  <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
-                </View>
-                
-                {user.isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
-                  <View style={styles.adminControls}>
-                    {order.status === 'pending' && (
-                      <TouchableOpacity
-                        style={styles.statusButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          updateOrderStatus(order.id, 'preparing');
-                        }}
-                      >
-                        <Text style={styles.statusButtonText}>Принять</Text>
-                      </TouchableOpacity>
-                    )}
-                    {order.status === 'preparing' && (
-                      <TouchableOpacity
-                        style={styles.statusButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          updateOrderStatus(order.id, 'ready');
-                        }}
-                      >
-                        <Text style={styles.statusButtonText}>Готов</Text>
-                      </TouchableOpacity>
-                    )}
-                    {order.status === 'ready' && (
-                      <TouchableOpacity
-                        style={styles.statusButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          updateOrderStatus(order.id, 'delivered');
-                        }}
-                      >
-                        <Text style={styles.statusButtonText}>Выдан</Text>
-                      </TouchableOpacity>
-                    )}
+            <ScrollView 
+              style={styles.ordersScrollView}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+            >
+              {orders.map(order => (
+                <TouchableOpacity 
+                  key={order.id} 
+                  style={styles.orderCard}
+                  onPress={() => handleViewOrder(order)}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.orderHeader}>
+                    <Text style={styles.orderId}>Заказ #{order.id}</Text>
+                    <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) }]}>
+                      <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
+                    </View>
                   </View>
-                )}
-                
-                {order.status === 'cancelled' && order.cancelReason && (
-                  <View style={styles.cancelledInfo}>
-                    <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))
+                  <Text style={styles.orderDate}>
+                    {new Date(order.createdAt).toLocaleString('ru-RU', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                  <Text style={styles.orderTotal}>{order.total} ₽</Text>
+                  
+                  {user.isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
+                    <View style={styles.adminControls}>
+                      {order.status === 'pending' && (
+                        <TouchableOpacity
+                          style={styles.statusButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            updateOrderStatus(order.id, 'preparing');
+                          }}
+                        >
+                          <Text style={styles.statusButtonText}>Принять</Text>
+                        </TouchableOpacity>
+                      )}
+                      {order.status === 'preparing' && (
+                        <TouchableOpacity
+                          style={styles.statusButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            updateOrderStatus(order.id, 'ready');
+                          }}
+                        >
+                          <Text style={styles.statusButtonText}>Готов</Text>
+                        </TouchableOpacity>
+                      )}
+                      {order.status === 'ready' && (
+                        <TouchableOpacity
+                          style={styles.statusButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            updateOrderStatus(order.id, 'delivered');
+                          }}
+                        >
+                          <Text style={styles.statusButtonText}>Выдан</Text>
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={[styles.statusButton, styles.cancelButton]}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          Alert.alert(
+                            'Отмена заказа',
+                            'Укажите причину отмены',
+                            [
+                              { text: 'Отмена', style: 'cancel' },
+                              { 
+                                text: 'Ошибка в заказе', 
+                                onPress: () => cancelOrder(order.id, 'Ошибка в заказе')
+                              },
+                              { 
+                                text: 'Нет ингредиентов', 
+                                onPress: () => cancelOrder(order.id, 'Нет ингредиентов')
+                              },
+                              { 
+                                text: 'Другое', 
+                                onPress: () => cancelOrder(order.id, 'Отменено администратором')
+                              },
+                            ]
+                          );
+                        }}
+                      >
+                        <Text style={styles.cancelButtonText}>Отменить</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {order.status === 'cancelled' && order.cancelReason && (
+                    <View style={styles.cancelledInfo}>
+                      <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           ) : (
             <Text style={styles.emptyText}>Нет заказов</Text>
           )}
@@ -1627,6 +1657,9 @@ const styles = StyleSheet.create({
   removeAddressButton: {
     padding: 4,
   },
+  ordersScrollView: {
+    maxHeight: 500,
+  },
   orderCard: {
     padding: 20,
     backgroundColor: '#f8f9fa',
@@ -1653,6 +1686,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#333',
+    flex: 1,
   },
   viewOrderButton: {
     padding: 4,
@@ -1682,7 +1716,9 @@ const styles = StyleSheet.create({
   },
   adminControls: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    marginTop: 8,
   },
   statusButton: {
     backgroundColor: '#9a4759',
@@ -1691,6 +1727,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statusButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  cancelButton: {
+    backgroundColor: '#ff4444',
+  },
+  cancelButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: '#fff',

@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Plus, Minus, Clock, MapPin, Eye, EyeOff, X, ShoppingCart } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
-import { CATEGORIES } from '@/constants/dishes';
+
 import { Dish } from '@/types/restaurant';
 
 export default function MenuScreen() {
@@ -184,83 +184,87 @@ export default function MenuScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
-        <LinearGradient
-          colors={['#9a4759', '#b85a6e']}
-          style={styles.header}
-        >
-          <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
-            <Text style={styles.restaurantName}>{restaurant.name}</Text>
-            <View style={styles.restaurantInfo}>
-              <View style={styles.infoItem}>
-                <MapPin color="#fff" size={16} />
-                <Text style={styles.infoText}>{restaurant.address}</Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Clock color="#fff" size={16} />
-                <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
-              </View>
-            </View>
-          </Animated.View>
-        </LinearGradient>
-      </Animated.View>
-
-      {/* Order Status Block for Users */}
-      {currentOrder && !user?.isAdmin && (
-        <TouchableOpacity 
-          style={styles.orderStatusBlock}
-          onPress={() => router.push('/(tabs)/profile')}
-          activeOpacity={0.9}
-        >
-          <View style={styles.orderStatusContent}>
-            <View style={styles.orderStatusLeft}>
-              <Text style={styles.orderStatusTitle}>Заказ #{currentOrder.id}</Text>
-              <Text style={styles.orderStatusSubtitle}>{currentOrder.total} ₽</Text>
-            </View>
-            <View style={[styles.orderStatusBadge, { backgroundColor: getStatusColor(currentOrder.status) }]}>
-              <Text style={styles.orderStatusBadgeText}>{getStatusText(currentOrder.status)}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* Admin Orders Section */}
-      {user?.isAdmin && orders.length > 0 && (
-        <View style={styles.adminOrdersSection}>
-          <Text style={styles.adminOrdersTitle}>Заказы пользователей</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.adminOrdersScroll}
+    <View style={styles.container}>
+      <View style={[styles.headerWrapper, { paddingTop: insets.top }]}>
+        <Animated.View style={[styles.headerContainer, { height: headerHeight }]}>
+          <LinearGradient
+            colors={['#9a4759', '#b85a6e']}
+            style={styles.header}
           >
-            {orders.map(order => (
-              <TouchableOpacity
-                key={order.id}
-                style={styles.adminOrderCard}
-                onPress={() => router.push('/(tabs)/profile')}
-                activeOpacity={0.9}
-              >
-                <View style={styles.adminOrderHeader}>
-                  <Text style={styles.adminOrderId}>#{order.id}</Text>
-                  <View style={[styles.adminOrderStatus, { backgroundColor: getStatusColor(order.status) }]}>
-                    <Text style={styles.adminOrderStatusText}>{getStatusText(order.status)}</Text>
-                  </View>
+            <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+              <Text style={styles.restaurantName}>{restaurant.name}</Text>
+              <View style={styles.restaurantInfo}>
+                <View style={styles.infoItem}>
+                  <MapPin color="#fff" size={16} />
+                  <Text style={styles.infoText}>{restaurant.address}</Text>
                 </View>
-                <Text style={styles.adminOrderTotal}>{order.total} ₽</Text>
-                <Text style={styles.adminOrderDate}>
-                  {new Date(order.createdAt).toLocaleString('ru-RU', { 
-                    day: '2-digit', 
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+                <View style={styles.infoItem}>
+                  <Clock color="#fff" size={16} />
+                  <Text style={styles.infoText}>{restaurant.deliveryTime}</Text>
+                </View>
+              </View>
+            </Animated.View>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Order Status Block for Users */}
+        {currentOrder && !user?.isAdmin && (
+          <TouchableOpacity 
+            style={styles.orderStatusBlock}
+            onPress={() => router.push('/(tabs)/profile')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.orderStatusContent}>
+              <View style={styles.orderStatusLeft}>
+                <Text style={styles.orderStatusTitle}>Заказ #{currentOrder.id}</Text>
+                <Text style={styles.orderStatusSubtitle}>{currentOrder.total} ₽</Text>
+              </View>
+              <View style={[styles.orderStatusBadge, { backgroundColor: getStatusColor(currentOrder.status) }]}>
+                <Text style={styles.orderStatusBadgeText}>{getStatusText(currentOrder.status)}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Admin Orders Section */}
+        {user?.isAdmin && orders.length > 0 && (
+          <View style={styles.adminOrdersSection}>
+            <Text style={styles.adminOrdersTitle}>Заказы пользователей</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.adminOrdersScroll}
+            >
+              {orders.map(order => (
+                <TouchableOpacity
+                  key={order.id}
+                  style={styles.adminOrderCard}
+                  onPress={() => router.push('/(tabs)/profile')}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.adminOrderHeader}>
+                    <Text style={styles.adminOrderId}>#{order.id}</Text>
+                    <View style={[styles.adminOrderStatus, { backgroundColor: getStatusColor(order.status) }]}>
+                      <Text style={styles.adminOrderStatusText}>{getStatusText(order.status)}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.adminOrderTotal}>{order.total} ₽</Text>
+                  <Text style={styles.adminOrderDate}>
+                    {new Date(order.createdAt).toLocaleString('ru-RU', { 
+                      day: '2-digit', 
+                      month: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
+
 
       <View style={styles.categoriesContainer}>
         <TouchableOpacity
@@ -312,18 +316,18 @@ export default function MenuScreen() {
         scrollEventThrottle={16}
         {...panResponder.panHandlers}
       >
-        {CATEGORIES.map(category => {
-          if (selectedCategory !== 'Все' && selectedCategory !== category) return null;
+        {categories.filter(cat => cat.visible !== false).map(category => {
+          if (selectedCategory !== 'Все' && selectedCategory !== category.name) return null;
           
           const categoryDishes = dishes.filter(dish => 
-            dish.category === category && 
+            dish.category === category.name && 
             (user?.isAdmin || dish.available)
           );
           if (categoryDishes.length === 0) return null;
 
           return (
-            <View key={category} style={styles.categorySection}>
-              <Text style={styles.categoryTitle}>{category}</Text>
+            <View key={category.id} style={styles.categorySection}>
+              <Text style={styles.categoryTitle}>{category.name}</Text>
               <View style={styles.dishesGrid}>
                 {categoryDishes.map(renderDishCard)}
               </View>
@@ -488,17 +492,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f7fa',
   },
-  headerContainer: {
-    overflow: 'hidden',
-    zIndex: 10,
-  },
-  header: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    justifyContent: 'flex-end',
+  headerWrapper: {
+    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -507,6 +502,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 8,
+  },
+  headerContainer: {
+    overflow: 'hidden',
+  },
+  header: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    justifyContent: 'flex-end',
   },
   headerContent: {
     marginTop: 10,
@@ -937,20 +943,8 @@ const styles = StyleSheet.create({
   },
   orderStatusBlock: {
     backgroundColor: '#fff',
-    marginHorizontal: 0,
-    marginVertical: 0,
-    borderRadius: 0,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-    borderLeftWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   orderStatusContent: {
     flexDirection: 'row',
@@ -1016,8 +1010,8 @@ const styles = StyleSheet.create({
   adminOrdersSection: {
     backgroundColor: '#fff',
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   adminOrdersTitle: {
     fontSize: 18,
