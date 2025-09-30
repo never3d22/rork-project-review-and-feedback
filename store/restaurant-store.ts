@@ -62,6 +62,26 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i3drirnswip2jkkao4snr',
   });
 
+  // Load restaurant data from storage on mount
+  useEffect(() => {
+    const loadRestaurant = async () => {
+      try {
+        const restaurantData = await storage.getItem('restaurant');
+        if (restaurantData) {
+          setRestaurant(JSON.parse(restaurantData));
+        }
+      } catch (error) {
+        console.error('Error loading restaurant data:', error);
+      }
+    };
+    loadRestaurant();
+  }, []);
+
+  // Save restaurant to storage whenever it changes
+  useEffect(() => {
+    storage.setItem('restaurant', JSON.stringify(restaurant));
+  }, [restaurant]);
+
   // Load data from storage on mount
   useEffect(() => {
     const loadData = async () => {
@@ -255,7 +275,11 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   }, []);
 
   const updateRestaurant = useCallback((updates: Partial<Restaurant>) => {
-    setRestaurant(prevRestaurant => ({ ...prevRestaurant, ...updates }));
+    setRestaurant(prevRestaurant => {
+      const updated = { ...prevRestaurant, ...updates };
+      console.log('Updating restaurant:', updated);
+      return updated;
+    });
   }, []);
 
   const addCategory = useCallback((category: Omit<Category, 'id'>) => {
