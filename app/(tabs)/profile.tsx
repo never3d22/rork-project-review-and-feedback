@@ -9,7 +9,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -18,29 +18,43 @@ import {
   ShoppingBag, 
   Crown, 
   LogOut,
-  Mail,
-  Phone,
   MapPin,
   Plus,
   Eye,
+  EyeOff,
   Trash2,
+  X,
 } from 'lucide-react-native';
-import { router } from 'expo-router';
+
 import { useRestaurant } from '@/store/restaurant-store';
+import { CATEGORIES } from '@/constants/dishes';
+import { Dish } from '@/types/restaurant';
 
 export default function ProfileScreen() {
-  const { user, orders, loginAsAdmin, loginAsUser, logout, updateUser, updateOrderStatus, sendSMSCode, verifySMSCode } = useRestaurant();
+  const { user, orders, loginAsAdmin, loginAsUser, logout, updateUser, updateOrderStatus, sendSMSCode, verifySMSCode, dishes, addDish, updateDish, deleteDish, toggleDishVisibility, categories, addCategory, deleteCategory } = useRestaurant();
   const insets = useSafeAreaInsets();
   const [showAdminModal, setShowAdminModal] = useState(false);
-  const [showUserModal, setShowUserModal] = useState(false);
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showDishManagementModal, setShowDishManagementModal] = useState(false);
+  const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false);
+  const [showAddDishModal, setShowAddDishModal] = useState(false);
+  const [showEditDishModal, setShowEditDishModal] = useState(false);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const [newDishName, setNewDishName] = useState('');
+  const [newDishDescription, setNewDishDescription] = useState('');
+  const [newDishPrice, setNewDishPrice] = useState('');
+  const [newDishCategory, setNewDishCategory] = useState('Салаты');
+  const [newDishImage, setNewDishImage] = useState('');
+  const [newDishWeight, setNewDishWeight] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+
   const [userPhone, setUserPhone] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [adminUsername, setAdminUsername] = useState('');
@@ -197,20 +211,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogin = () => {
-    if (!userPhone.trim() || !userPassword.trim()) {
-      Alert.alert('Ошибка', 'Заполните все поля');
-      return;
-    }
-    const success = loginAsUser(userPhone, userPassword);
-    if (success) {
-      setShowUserModal(false);
-      setUserPhone('');
-      setUserPassword('');
-    } else {
-      Alert.alert('Ошибка', 'Неверные данные');
-    }
-  };
+
   
   const handleAdminLogin = () => {
     if (!adminUsername.trim() || !adminPassword.trim()) {
@@ -562,15 +563,29 @@ export default function ProfileScreen() {
             
             <TouchableOpacity
               style={styles.adminFunctionCard}
-              onPress={() => router.push('/admin')}
+              onPress={() => setShowDishManagementModal(true)}
               activeOpacity={0.9}
             >
               <View style={styles.adminFunctionIcon}>
-                <ShoppingBag color="#9a4759" size={24} />
+                <Settings color="#9a4759" size={24} />
               </View>
               <View style={styles.adminFunctionInfo}>
-                <Text style={styles.adminFunctionTitle}>Управление заказами</Text>
-                <Text style={styles.adminFunctionDescription}>Просмотр и обработка заказов</Text>
+                <Text style={styles.adminFunctionTitle}>Управление блюдами</Text>
+                <Text style={styles.adminFunctionDescription}>Добавление и редактирование блюд</Text>
+              </View>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.adminFunctionCard}
+              onPress={() => setShowCategoryManagementModal(true)}
+              activeOpacity={0.9}
+            >
+              <View style={styles.adminFunctionIcon}>
+                <Settings color="#9a4759" size={24} />
+              </View>
+              <View style={styles.adminFunctionInfo}>
+                <Text style={styles.adminFunctionTitle}>Управление категориями</Text>
+                <Text style={styles.adminFunctionDescription}>Добавление и редактирование категорий</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -785,6 +800,411 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Dish Management Modal */}
+      <Modal
+        visible={showDishManagementModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDishManagementModal(false)}
+      >
+        <View style={styles.managementModalContainer}>
+          <View style={styles.managementModalHeader}>
+            <Text style={styles.managementModalTitle}>Управление блюдами</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowDishManagementModal(false)}
+            >
+              <X color="#333" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.addNewButton}
+            onPress={() => {
+              setNewDishName('');
+              setNewDishDescription('');
+              setNewDishPrice('');
+              setNewDishCategory('Салаты');
+              setNewDishImage('');
+              setNewDishWeight('');
+              setShowAddDishModal(true);
+            }}
+          >
+            <Plus color="#fff" size={20} />
+            <Text style={styles.addNewButtonText}>Добавить блюдо</Text>
+          </TouchableOpacity>
+          
+          <ScrollView style={styles.managementModalContent}>
+            {dishes.map(dish => (
+              <View key={dish.id} style={styles.managementItem}>
+                <View style={styles.managementItemInfo}>
+                  <Text style={styles.managementItemName}>{dish.name}</Text>
+                  <Text style={styles.managementItemDetails}>{dish.category} • {dish.price} ₽</Text>
+                </View>
+                <View style={styles.managementItemActions}>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => toggleDishVisibility(dish.id)}
+                  >
+                    {dish.available ? (
+                      <Eye color="#fff" size={16} />
+                    ) : (
+                      <EyeOff color="#fff" size={16} />
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => {
+                      setEditingDish(dish);
+                      setNewDishName(dish.name);
+                      setNewDishDescription(dish.description);
+                      setNewDishPrice(dish.price.toString());
+                      setNewDishCategory(dish.category);
+                      setNewDishImage(dish.image);
+                      setNewDishWeight(dish.weight || '');
+                      setShowEditDishModal(true);
+                    }}
+                  >
+                    <Settings color="#fff" size={16} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => {
+                      Alert.alert(
+                        'Удалить блюдо',
+                        `Вы уверены, что хотите удалить "${dish.name}"?`,
+                        [
+                          { text: 'Отмена', style: 'cancel' },
+                          { text: 'Удалить', onPress: () => deleteDish(dish.id), style: 'destructive' }
+                        ]
+                      );
+                    }}
+                  >
+                    <Trash2 color="#fff" size={16} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Category Management Modal */}
+      <Modal
+        visible={showCategoryManagementModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCategoryManagementModal(false)}
+      >
+        <View style={styles.managementModalContainer}>
+          <View style={styles.managementModalHeader}>
+            <Text style={styles.managementModalTitle}>Управление категориями</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCategoryManagementModal(false)}
+            >
+              <X color="#333" size={24} />
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.addNewButton}
+            onPress={() => {
+              setNewCategoryName('');
+              setShowAddCategoryModal(true);
+            }}
+          >
+            <Plus color="#fff" size={20} />
+            <Text style={styles.addNewButtonText}>Добавить категорию</Text>
+          </TouchableOpacity>
+          
+          <ScrollView style={styles.managementModalContent}>
+            {categories.map(category => (
+              <View key={category.id} style={styles.managementItem}>
+                <View style={styles.managementItemInfo}>
+                  <Text style={styles.managementItemName}>{category.name}</Text>
+                </View>
+                <View style={styles.managementItemActions}>
+                  <TouchableOpacity
+                    style={styles.quantityButton}
+                    onPress={() => {
+                      Alert.alert(
+                        'Удалить категорию',
+                        `Вы уверены, что хотите удалить "${category.name}"?`,
+                        [
+                          { text: 'Отмена', style: 'cancel' },
+                          { text: 'Удалить', onPress: () => deleteCategory(category.id), style: 'destructive' }
+                        ]
+                      );
+                    }}
+                  >
+                    <Trash2 color="#fff" size={16} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Add Dish Modal */}
+      <Modal
+        visible={showAddDishModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddDishModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Добавить блюдо</Text>
+            
+            <ScrollView style={styles.formScroll}>
+              <TextInput
+                style={styles.input}
+                placeholder="Название"
+                value={newDishName}
+                onChangeText={setNewDishName}
+              />
+              
+              <TextInput
+                style={[styles.input, { minHeight: 80 }]}
+                placeholder="Описание"
+                value={newDishDescription}
+                onChangeText={setNewDishDescription}
+                multiline
+                textAlignVertical="top"
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Цена"
+                value={newDishPrice}
+                onChangeText={setNewDishPrice}
+                keyboardType="numeric"
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Вес (например: 250г)"
+                value={newDishWeight}
+                onChangeText={setNewDishWeight}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="URL изображения"
+                value={newDishImage}
+                onChangeText={setNewDishImage}
+              />
+              
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerLabel}>Категория:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {CATEGORIES.map(cat => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.categoryPill,
+                        newDishCategory === cat && styles.categoryPillActive
+                      ]}
+                      onPress={() => setNewDishCategory(cat)}
+                    >
+                      <Text style={[
+                        styles.categoryPillText,
+                        newDishCategory === cat && styles.categoryPillTextActive
+                      ]}>{cat}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </ScrollView>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowAddDishModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  if (!newDishName || !newDishPrice) {
+                    Alert.alert('Ошибка', 'Заполните название и цену');
+                    return;
+                  }
+                  addDish({
+                    name: newDishName,
+                    description: newDishDescription,
+                    price: parseFloat(newDishPrice),
+                    category: newDishCategory,
+                    image: newDishImage || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+                    available: true,
+                    weight: newDishWeight,
+                  });
+                  setShowAddDishModal(false);
+                  Alert.alert('Успех', 'Блюдо добавлено');
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Добавить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Dish Modal */}
+      <Modal
+        visible={showEditDishModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowEditDishModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Редактировать блюдо</Text>
+            
+            <ScrollView style={styles.formScroll}>
+              <TextInput
+                style={styles.input}
+                placeholder="Название"
+                value={newDishName}
+                onChangeText={setNewDishName}
+              />
+              
+              <TextInput
+                style={[styles.input, { minHeight: 80 }]}
+                placeholder="Описание"
+                value={newDishDescription}
+                onChangeText={setNewDishDescription}
+                multiline
+                textAlignVertical="top"
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Цена"
+                value={newDishPrice}
+                onChangeText={setNewDishPrice}
+                keyboardType="numeric"
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="Вес (например: 250г)"
+                value={newDishWeight}
+                onChangeText={setNewDishWeight}
+              />
+              
+              <TextInput
+                style={styles.input}
+                placeholder="URL изображения"
+                value={newDishImage}
+                onChangeText={setNewDishImage}
+              />
+              
+              <View style={styles.pickerContainer}>
+                <Text style={styles.pickerLabel}>Категория:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {CATEGORIES.map(cat => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.categoryPill,
+                        newDishCategory === cat && styles.categoryPillActive
+                      ]}
+                      onPress={() => setNewDishCategory(cat)}
+                    >
+                      <Text style={[
+                        styles.categoryPillText,
+                        newDishCategory === cat && styles.categoryPillTextActive
+                      ]}>{cat}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </ScrollView>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowEditDishModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  if (!editingDish || !newDishName || !newDishPrice) {
+                    Alert.alert('Ошибка', 'Заполните название и цену');
+                    return;
+                  }
+                  updateDish(editingDish.id, {
+                    name: newDishName,
+                    description: newDishDescription,
+                    price: parseFloat(newDishPrice),
+                    category: newDishCategory,
+                    image: newDishImage,
+                    weight: newDishWeight,
+                  });
+                  setShowEditDishModal(false);
+                  Alert.alert('Успех', 'Блюдо обновлено');
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Сохранить</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Add Category Modal */}
+      <Modal
+        visible={showAddCategoryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddCategoryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Добавить категорию</Text>
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Название категории"
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowAddCategoryModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Отмена</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={() => {
+                  if (!newCategoryName.trim()) {
+                    Alert.alert('Ошибка', 'Введите название категории');
+                    return;
+                  }
+                  addCategory({
+                    name: newCategoryName,
+                    order: categories.length + 1,
+                  });
+                  setShowAddCategoryModal(false);
+                  Alert.alert('Успех', 'Категория добавлена');
+                }}
+              >
+                <Text style={styles.modalButtonConfirmText}>Добавить</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1353,5 +1773,133 @@ const styles = StyleSheet.create({
   cancelledOrderDate: {
     fontSize: 14,
     color: '#666',
+  },
+  managementModalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  managementModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  managementModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#333',
+  },
+  managementModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  addNewButton: {
+    backgroundColor: '#9a4759',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    marginHorizontal: 20,
+    marginVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  addNewButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  managementItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e8eaed',
+  },
+  managementItemInfo: {
+    flex: 1,
+  },
+  managementItemName: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#333',
+    marginBottom: 4,
+  },
+  managementItemDetails: {
+    fontSize: 14,
+    color: '#666',
+  },
+  managementItemActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quantityButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#9a4759',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#9a4759',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  formScroll: {
+    maxHeight: 400,
+  },
+  pickerContainer: {
+    marginBottom: 16,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+    fontWeight: '500' as const,
+  },
+  categoryPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  categoryPillActive: {
+    backgroundColor: '#9a4759',
+    borderColor: '#9a4759',
+  },
+  categoryPillText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  categoryPillTextActive: {
+    color: '#fff',
+    fontWeight: '600' as const,
   },
 });
