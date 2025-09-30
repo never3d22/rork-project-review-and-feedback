@@ -432,149 +432,89 @@ export default function CartScreen() {
       return { success: true };
     }
 
-    if (paymentMethod === 'card') {
-      const stripeKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-      if (!stripeKey) {
-        console.error('❌ Stripe API ключ не настроен');
-        return { 
-          success: false, 
-          error: 'Ошибка: API ключ Stripe не настроен.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_ваш_ключ\n\nПолучить ключи: https://dashboard.stripe.com/apikeys' 
-        };
-      }
+    const shopId = process.env.EXPO_PUBLIC_YOOKASSA_SHOP_ID;
+    const secretKey = process.env.EXPO_PUBLIC_YOOKASSA_SECRET_KEY;
 
-      try {
-        console.log('🔄 Обработка оплаты картой через Stripe...');
-        console.log('API Key:', stripeKey.substring(0, 20) + '...');
-        
-        return { 
-          success: false, 
-          error: 'Интеграция Stripe требует установки @stripe/stripe-react-native.\n\nВыполните:\nbun expo install @stripe/stripe-react-native\n\nИли используйте другой способ оплаты.' 
-        };
-      } catch (error) {
-        console.error('❌ Ошибка Stripe:', error);
-        return { success: false, error: 'Ошибка при оплате картой' };
-      }
+    if (!shopId || !secretKey) {
+      console.error('❌ ЮKassa API ключи не настроены');
+      return { 
+        success: false, 
+        error: 'Ошибка: API ключи ЮKassa не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_YOOKASSA_SHOP_ID=ваш_shop_id\nEXPO_PUBLIC_YOOKASSA_SECRET_KEY=ваш_secret_key\n\nПолучить доступ: https://yookassa.ru/my/merchant/integration/api-keys' 
+      };
     }
 
-    if (paymentMethod === 'sberpay') {
-      const username = process.env.EXPO_PUBLIC_SBER_API_USERNAME;
-      const password = process.env.EXPO_PUBLIC_SBER_API_PASSWORD;
-
-      if (!username || !password) {
-        console.error('❌ SberPay API ключи не настроены');
-        return { 
-          success: false, 
-          error: 'Ошибка: API ключи SberPay не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_SBER_API_USERNAME=ваш_username\nEXPO_PUBLIC_SBER_API_PASSWORD=ваш_password\n\nПолучить доступ: https://securepayments.sberbank.ru/' 
-        };
-      }
-
-      try {
+    try {
+      let paymentMethodData: any = {};
+      
+      if (paymentMethod === 'card') {
+        console.log('🔄 Обработка оплаты банковской картой через ЮKassa...');
+        paymentMethodData = { type: 'bank_card' };
+      } else if (paymentMethod === 'sberpay') {
         console.log('🔄 Обработка оплаты через SberPay...');
-        console.log('Username:', username);
-        
-        const response = await fetch('https://securepayments.sberbank.ru/payment/rest/register.do', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userName: username,
-            password: password,
-            orderNumber: orderId,
-            amount: getCartTotal() * 100,
-            returnUrl: 'myapp://payment-success',
-            failUrl: 'myapp://payment-failed',
-            description: `Заказ №${orderId}`,
-          })
-        });
-
-        console.log('Статус ответа:', response.status);
-        const data = await response.json();
-        console.log('Ответ от SberPay:', JSON.stringify(data, null, 2));
-        
-        if (data.errorCode) {
-          console.error('❌ Ошибка SberPay:', data.errorMessage);
-          return { 
-            success: false, 
-            error: `Ошибка SberPay (код ${data.errorCode}): ${data.errorMessage || 'Неизвестная ошибка'}` 
-          };
-        }
-
-        if (data.formUrl && data.orderId) {
-          console.log('✅ Ссылка для оплаты получена:', data.formUrl);
-          console.log('ID платежа:', data.orderId);
-          return { 
-            success: true, 
-            paymentUrl: data.formUrl,
-            paymentId: data.orderId 
-          };
-        }
-
-        return { success: false, error: 'Не удалось получить ссылку для оплаты' };
-      } catch (error) {
-        console.error('❌ Ошибка подключения к SberPay:', error);
-        return { success: false, error: 'Ошибка при подключении к SberPay. Проверьте интернет-соединение.' };
+        paymentMethodData = { type: 'sberbank' };
+      } else if (paymentMethod === 'sbp') {
+        console.log('🔄 Обработка оплаты через СБП...');
+        paymentMethodData = { type: 'sbp' };
       }
-    }
 
-    if (paymentMethod === 'sbp') {
-      const terminalKey = process.env.EXPO_PUBLIC_TINKOFF_TERMINAL_KEY;
-      const secretKey = process.env.EXPO_PUBLIC_TINKOFF_SECRET_KEY;
+      const idempotenceKey = `${orderId}-${Date.now()}`;
+      const authHeader = 'Basic ' + btoa(`${shopId}:${secretKey}`);
+      
+      console.log('Shop ID:', shopId);
+      console.log('Idempotence Key:', idempotenceKey);
+      
+      const response = await fetch('https://api.yookassa.ru/v3/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotence-Key': idempotenceKey,
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify({
+          amount: {
+            value: getCartTotal().toFixed(2),
+            currency: 'RUB'
+          },
+          capture: true,
+          confirmation: {
+            type: 'redirect',
+            return_url: 'myapp://payment-success'
+          },
+          description: `Заказ №${orderId}`,
+          metadata: {
+            order_id: orderId
+          },
+          payment_method_data: paymentMethodData
+        })
+      });
 
-      if (!terminalKey || !secretKey) {
-        console.error('❌ СБП API ключи не настроены');
+      console.log('Статус ответа:', response.status);
+      const data = await response.json();
+      console.log('Ответ от ЮKassa:', JSON.stringify(data, null, 2));
+      
+      if (data.type === 'error') {
+        console.error('❌ Ошибка ЮKassa:', data.description);
         return { 
           success: false, 
-          error: 'Ошибка: API ключи СБП не настроены.\n\nДобавьте в .env файл:\nEXPO_PUBLIC_TINKOFF_TERMINAL_KEY=ваш_terminal_key\nEXPO_PUBLIC_TINKOFF_SECRET_KEY=ваш_secret_key\n\nПолучить доступ: https://www.tinkoff.ru/kassa/\n\nИли используйте ЮKassa: https://yookassa.ru/' 
+          error: `Ошибка ЮKassa: ${data.description || 'Неизвестная ошибка'}` 
         };
       }
 
-      try {
-        console.log('🔄 Обработка оплаты через СБП (Тинькофф)...');
-        console.log('Terminal Key:', terminalKey.substring(0, 20) + '...');
-        
-        const response = await fetch('https://securepay.tinkoff.ru/v2/Init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            TerminalKey: terminalKey,
-            Amount: getCartTotal() * 100,
-            OrderId: orderId,
-            PayType: 'SBP',
-            Description: `Заказ №${orderId}`,
-            SuccessURL: 'myapp://payment-success',
-            FailURL: 'myapp://payment-failed',
-          })
-        });
-
-        console.log('Статус ответа:', response.status);
-        const data = await response.json();
-        console.log('Ответ от Тинькофф:', JSON.stringify(data, null, 2));
-        
-        if (!data.Success) {
-          console.error('❌ Ошибка СБП:', data.Message || data.Details);
-          return { 
-            success: false, 
-            error: `Ошибка СБП: ${data.Message || data.Details || 'Неизвестная ошибка'}` 
-          };
-        }
-
-        if (data.PaymentURL && data.PaymentId) {
-          console.log('✅ Ссылка для оплаты получена:', data.PaymentURL);
-          console.log('ID платежа:', data.PaymentId);
-          return { 
-            success: true, 
-            paymentUrl: data.PaymentURL,
-            paymentId: data.PaymentId 
-          };
-        }
-
-        return { success: false, error: 'Не удалось получить ссылку для оплаты через СБП' };
-      } catch (error) {
-        console.error('❌ Ошибка подключения к СБП:', error);
-        return { success: false, error: 'Ошибка при подключении к системе СБП. Проверьте интернет-соединение.' };
+      if (data.confirmation?.confirmation_url && data.id) {
+        console.log('✅ Ссылка для оплаты получена:', data.confirmation.confirmation_url);
+        console.log('ID платежа:', data.id);
+        return { 
+          success: true, 
+          paymentUrl: data.confirmation.confirmation_url,
+          paymentId: data.id 
+        };
       }
-    }
 
-    return { success: false, error: 'Неизвестный способ оплаты' };
+      return { success: false, error: 'Не удалось получить ссылку для оплаты' };
+    } catch (error) {
+      console.error('❌ Ошибка подключения к ЮKassa:', error);
+      return { success: false, error: 'Ошибка при подключении к системе оплаты. Проверьте интернет-соединение.' };
+    }
   };
 
   const handleCheckout = async () => {
