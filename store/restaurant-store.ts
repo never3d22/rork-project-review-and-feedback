@@ -174,11 +174,12 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       id: Date.now().toString(),
       status: 'pending',
       createdAt: new Date(),
+      userId: user?.id,
     };
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
     return newOrder.id;
-  }, []);
+  }, [user]);
 
   const updateOrderStatus = useCallback((orderId: string, status: Order['status']) => {
     setOrders(prevOrders =>

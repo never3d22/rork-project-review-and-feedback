@@ -614,56 +614,7 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {!user.isAdmin && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <ShoppingBag color="#333" size={20} />
-              <Text style={styles.sectionTitle}>Мои заказы</Text>
-            </View>
-            
-            {orders.length > 0 ? (
-              <ScrollView 
-                style={styles.ordersScrollView}
-                showsVerticalScrollIndicator={false}
-                nestedScrollEnabled
-              >
-                {orders.map(order => (
-                  <TouchableOpacity 
-                    key={order.id} 
-                    style={styles.orderCard}
-                    onPress={() => handleViewOrder(order)}
-                    activeOpacity={0.9}
-                  >
-                    <View style={styles.orderHeader}>
-                      <Text style={styles.orderId}>Заказ #{order.id}</Text>
-                      <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) }]}>
-                        <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
-                      </View>
-                    </View>
-                    <Text style={styles.orderDate}>
-                      {new Date(order.createdAt).toLocaleString('ru-RU', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </Text>
-                    <Text style={styles.orderTotal}>{order.total} ₽</Text>
-                    
-                    {order.status === 'cancelled' && order.cancelReason && (
-                      <View style={styles.cancelledInfo}>
-                        <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            ) : (
-              <Text style={styles.emptyText}>Нет заказов</Text>
-            )}
-          </View>
-        )}
+
       </ScrollView>
 
       <Modal

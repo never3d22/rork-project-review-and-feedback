@@ -41,14 +41,16 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen
-        name="orders"
-        options={{
-          title: "Заказы",
-          tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
-          tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
-        }}
-      />
+      {user && !user.isAdmin && (
+        <Tabs.Screen
+          name="orders"
+          options={{
+            title: "Заказы",
+            tabBarIcon: ({ color, size }) => <ClipboardList color={color} size={size} />,
+            tabBarBadge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="profile"
         options={{

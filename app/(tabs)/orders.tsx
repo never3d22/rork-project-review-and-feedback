@@ -20,17 +20,6 @@ export default function OrdersScreen() {
   const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
-  if (!user?.isAdmin) {
-    return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Text style={styles.noAccessText}>Доступ запрещен</Text>
-      </View>
-    );
-  }
-
-  const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'preparing');
-  const cancelledOrders = orders.filter(order => order.status === 'cancelled');
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return '#FFA500';
@@ -53,260 +42,321 @@ export default function OrdersScreen() {
     }
   };
 
-  const renderOrderCard = (order: Order) => (
-    <View key={order.id} style={styles.orderCard}>
-      <View style={styles.orderHeader}>
-        <View style={styles.orderHeaderLeft}>
-          <Text style={styles.orderId}>Заказ #{order.id}</Text>
-          <Text style={styles.orderDate}>
-            {new Date(order.createdAt).toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
+  const renderOrderCard = (order: Order) => {
+    const isAdmin = user?.isAdmin;
+    
+    return (
+      <View key={order.id} style={styles.orderCard}>
+        <View style={styles.orderHeader}>
+          <View style={styles.orderHeaderLeft}>
+            <Text style={styles.orderId}>Заказ #{order.id}</Text>
+            <Text style={styles.orderDate}>
+              {new Date(order.createdAt).toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
+            <Text style={styles.statusBadgeText}>{getStatusText(order.status)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.orderDetails}>
+          <Text style={styles.orderType}>
+            {order.deliveryType === 'delivery' ? '🚗 Доставка' : '🏃 Самовывоз'}
           </Text>
+          <Text style={styles.orderTotal}>{order.total} ₽</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-          <Text style={styles.statusBadgeText}>{getStatusText(order.status)}</Text>
+
+        {order.deliveryAddress && (
+          <View style={styles.deliveryInfo}>
+            <Text style={styles.deliveryLabel}>Адрес доставки:</Text>
+            <Text style={styles.deliveryAddress}>{order.deliveryAddress}</Text>
+          </View>
+        )}
+
+        {order.deliveryTime && (
+          <View style={styles.deliveryInfo}>
+            <Text style={styles.deliveryLabel}>Время:</Text>
+            <Text style={styles.deliveryTime}>{order.deliveryTime}</Text>
+          </View>
+        )}
+
+        <View style={styles.orderItems}>
+          {order.items.map((item, index) => (
+            <Text key={index} style={styles.orderItem}>
+              {item.dish.name} x{item.quantity}
+            </Text>
+          ))}
         </View>
+
+        {isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
+          <View style={styles.orderActions}>
+            {order.status === 'pending' && (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.preparingButton]}
+                  onPress={() => updateOrderStatus(order.id, 'preparing')}
+                >
+                  <Clock color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Готовить</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelButton]}
+                  onPress={() => {
+                    setCancellingOrder(order);
+                    setShowCancelModal(true);
+                  }}
+                >
+                  <XCircle color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Отменить</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            {order.status === 'preparing' && (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.readyButton]}
+                  onPress={() => updateOrderStatus(order.id, 'ready')}
+                >
+                  <Package color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Готов</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelButton]}
+                  onPress={() => {
+                    setCancellingOrder(order);
+                    setShowCancelModal(true);
+                  }}
+                >
+                  <XCircle color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Отменить</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            {order.status === 'ready' && (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deliveredButton]}
+                  onPress={() => updateOrderStatus(order.id, 'delivered')}
+                >
+                  <CheckCircle color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Выдан</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelButton]}
+                  onPress={() => {
+                    setCancellingOrder(order);
+                    setShowCancelModal(true);
+                  }}
+                >
+                  <XCircle color="#fff" size={18} />
+                  <Text style={styles.actionButtonText}>Отменить</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
       </View>
+    );
+  };
 
-      <View style={styles.orderDetails}>
-        <Text style={styles.orderType}>
-          {order.deliveryType === 'delivery' ? '🚗 Доставка' : '🏃 Самовывоз'}
-        </Text>
-        <Text style={styles.orderTotal}>{order.total} ₽</Text>
+  if (!user) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <Text style={styles.noAccessText}>Войдите в аккаунт</Text>
       </View>
+    );
+  }
 
-      {order.deliveryAddress && (
-        <View style={styles.deliveryInfo}>
-          <Text style={styles.deliveryLabel}>Адрес доставки:</Text>
-          <Text style={styles.deliveryAddress}>{order.deliveryAddress}</Text>
+  if (user.isAdmin) {
+    const pendingOrders = orders.filter(order => order.status === 'pending' || order.status === 'preparing');
+    const cancelledOrders = orders.filter(order => order.status === 'cancelled');
+
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>ФИРАУСИ</Text>
+          </View>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.statCard}>
+              <View style={styles.statIconContainer}>
+                <Clock color="#FFA500" size={24} />
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={styles.statValue}>{pendingOrders.length}</Text>
+                <Text style={styles.statLabel}>В обработке</Text>
+              </View>
+            </View>
+            
+            <View style={styles.statCard}>
+              <View style={styles.statIconContainer}>
+                <XCircle color="#F44336" size={24} />
+              </View>
+              <View style={styles.statInfo}>
+                <Text style={styles.statValue}>{cancelledOrders.length}</Text>
+                <Text style={styles.statLabel}>Отменено</Text>
+              </View>
+            </View>
+          </View>
         </View>
-      )}
 
-      {order.deliveryTime && (
-        <View style={styles.deliveryInfo}>
-          <Text style={styles.deliveryLabel}>Время:</Text>
-          <Text style={styles.deliveryTime}>{order.deliveryTime}</Text>
-        </View>
-      )}
-
-      <View style={styles.orderItems}>
-        {order.items.map((item, index) => (
-          <Text key={index} style={styles.orderItem}>
-            {item.dish.name} x{item.quantity}
-          </Text>
-        ))}
-      </View>
-
-      {order.status !== 'delivered' && order.status !== 'cancelled' && (
-        <View style={styles.orderActions}>
-          {order.status === 'pending' && (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {orders.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Package color="#ccc" size={64} />
+              <Text style={styles.emptyText}>Заказов пока нет</Text>
+            </View>
+          ) : (
             <>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.preparingButton]}
-                onPress={() => updateOrderStatus(order.id, 'preparing')}
-              >
-                <Clock color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Готовить</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => {
-                  setCancellingOrder(order);
-                  setShowCancelModal(true);
-                }}
-              >
-                <XCircle color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Отменить</Text>
-              </TouchableOpacity>
+              {pendingOrders.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Активные заказы</Text>
+                  {pendingOrders.map(renderOrderCard)}
+                </View>
+              )}
+
+              {orders.filter(o => o.status === 'ready').length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>Готовы к выдаче</Text>
+                  {orders.filter(o => o.status === 'ready').map(renderOrderCard)}
+                </View>
+              )}
+
+              {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>История</Text>
+                  {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').map(renderOrderCard)}
+                </View>
+              )}
             </>
           )}
-          {order.status === 'preparing' && (
-            <>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.readyButton]}
-                onPress={() => updateOrderStatus(order.id, 'ready')}
-              >
-                <Package color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Готов</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => {
-                  setCancellingOrder(order);
-                  setShowCancelModal(true);
-                }}
-              >
-                <XCircle color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Отменить</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          {order.status === 'ready' && (
-            <>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deliveredButton]}
-                onPress={() => updateOrderStatus(order.id, 'delivered')}
-              >
-                <CheckCircle color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Выдан</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={() => {
-                  setCancellingOrder(order);
-                  setShowCancelModal(true);
-                }}
-              >
-                <XCircle color="#fff" size={18} />
-                <Text style={styles.actionButtonText}>Отменить</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      )}
-    </View>
-  );
+        </ScrollView>
+
+        <Modal
+          visible={showCancelModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => {
+            setShowCancelModal(false);
+            setCancellingOrder(null);
+            setCancelReason('');
+          }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Отмена заказа</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => {
+                    setShowCancelModal(false);
+                    setCancellingOrder(null);
+                    setCancelReason('');
+                  }}
+                >
+                  <XCircle color="#666" size={24} />
+                </TouchableOpacity>
+              </View>
+              
+              {cancellingOrder && (
+                <View style={styles.modalBody}>
+                  <Text style={styles.cancelOrderText}>
+                    Вы уверены, что хотите отменить заказ #{cancellingOrder.id}?
+                  </Text>
+                  
+                  <View style={styles.fieldContainer}>
+                    <Text style={styles.fieldLabel}>Причина отмены</Text>
+                    <TextInput
+                      style={[styles.input, { minHeight: 100 }]}
+                      placeholder="Укажите причину отмены заказа"
+                      value={cancelReason}
+                      onChangeText={setCancelReason}
+                      multiline
+                      textAlignVertical="top"
+                    />
+                  </View>
+                </View>
+              )}
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={styles.modalButtonCancel}
+                  onPress={() => {
+                    setShowCancelModal(false);
+                    setCancellingOrder(null);
+                    setCancelReason('');
+                  }}
+                >
+                  <Text style={styles.modalButtonCancelText}>Отмена</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmCancelButton}
+                  onPress={() => {
+                    if (cancellingOrder) {
+                      cancelOrder(cancellingOrder.id, cancelReason || 'Отменено администратором');
+                      setShowCancelModal(false);
+                      setCancellingOrder(null);
+                      setCancelReason('');
+                    }
+                  }}
+                >
+                  <Text style={styles.confirmCancelButtonText}>Отменить заказ</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
+  const userOrders = orders.filter(order => order.userId === user?.id);
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>ФИРАУСИ</Text>
-        </View>
-        
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <Clock color="#FFA500" size={24} />
-            </View>
-            <View style={styles.statInfo}>
-              <Text style={styles.statValue}>{pendingOrders.length}</Text>
-              <Text style={styles.statLabel}>В обработке</Text>
-            </View>
-          </View>
-          
-          <View style={styles.statCard}>
-            <View style={styles.statIconContainer}>
-              <XCircle color="#F44336" size={24} />
-            </View>
-            <View style={styles.statInfo}>
-              <Text style={styles.statValue}>{cancelledOrders.length}</Text>
-              <Text style={styles.statLabel}>Отменено</Text>
-            </View>
-          </View>
+          <Text style={styles.logoText}>МОИ ЗАКАЗЫ</Text>
         </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {orders.length === 0 ? (
+        {userOrders.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Package color="#ccc" size={64} />
-            <Text style={styles.emptyText}>Заказов пока нет</Text>
+            <Text style={styles.emptyText}>У вас пока нет заказов</Text>
           </View>
         ) : (
           <>
-            {pendingOrders.length > 0 && (
+            {userOrders.filter(o => o.status === 'pending' || o.status === 'preparing').length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Активные заказы</Text>
-                {pendingOrders.map(renderOrderCard)}
+                {userOrders.filter(o => o.status === 'pending' || o.status === 'preparing').map(renderOrderCard)}
               </View>
             )}
 
-            {orders.filter(o => o.status === 'ready').length > 0 && (
+            {userOrders.filter(o => o.status === 'ready').length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Готовы к выдаче</Text>
-                {orders.filter(o => o.status === 'ready').map(renderOrderCard)}
+                {userOrders.filter(o => o.status === 'ready').map(renderOrderCard)}
               </View>
             )}
 
-            {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length > 0 && (
+            {userOrders.filter(o => o.status === 'delivered' || o.status === 'cancelled').length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>История</Text>
-                {orders.filter(o => o.status === 'delivered' || o.status === 'cancelled').map(renderOrderCard)}
+                {userOrders.filter(o => o.status === 'delivered' || o.status === 'cancelled').map(renderOrderCard)}
               </View>
             )}
           </>
         )}
       </ScrollView>
-
-      <Modal
-        visible={showCancelModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => {
-          setShowCancelModal(false);
-          setCancellingOrder(null);
-          setCancelReason('');
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Отмена заказа</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => {
-                  setShowCancelModal(false);
-                  setCancellingOrder(null);
-                  setCancelReason('');
-                }}
-              >
-                <XCircle color="#666" size={24} />
-              </TouchableOpacity>
-            </View>
-            
-            {cancellingOrder && (
-              <View style={styles.modalBody}>
-                <Text style={styles.cancelOrderText}>
-                  Вы уверены, что хотите отменить заказ #{cancellingOrder.id}?
-                </Text>
-                
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.fieldLabel}>Причина отмены</Text>
-                  <TextInput
-                    style={[styles.input, { minHeight: 100 }]}
-                    placeholder="Укажите причину отмены заказа"
-                    value={cancelReason}
-                    onChangeText={setCancelReason}
-                    multiline
-                    textAlignVertical="top"
-                  />
-                </View>
-              </View>
-            )}
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButtonCancel}
-                onPress={() => {
-                  setShowCancelModal(false);
-                  setCancellingOrder(null);
-                  setCancelReason('');
-                }}
-              >
-                <Text style={styles.modalButtonCancelText}>Отмена</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.confirmCancelButton}
-                onPress={() => {
-                  if (cancellingOrder) {
-                    cancelOrder(cancellingOrder.id, cancelReason || 'Отменено администратором');
-                    setShowCancelModal(false);
-                    setCancellingOrder(null);
-                    setCancelReason('');
-                  }
-                }}
-              >
-                <Text style={styles.confirmCancelButtonText}>Отменить заказ</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

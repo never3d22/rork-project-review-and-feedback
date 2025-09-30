@@ -30,6 +30,7 @@ export interface Order {
   createdAt: Date;
   cancelReason?: string;
   cancelledAt?: Date;
+  userId?: string;
 }
 
 export interface User {
