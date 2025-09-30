@@ -59,8 +59,8 @@ export default function MenuScreen() {
     router.push('/(tabs)/cart');
   };
 
-  // Get user's current active order
-  const currentOrder = user && !user.isAdmin ? orders.find(order => order.status !== 'delivered') : null;
+  // Get user's current active order (excluding cancelled orders)
+  const currentOrder = user && !user.isAdmin ? orders.find(order => order.status !== 'delivered' && order.status !== 'cancelled') : null;
   
   const getStatusColor = (status: string) => {
     switch (status) {

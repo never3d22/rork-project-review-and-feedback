@@ -611,121 +611,56 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ShoppingBag color="#333" size={20} />
-            <Text style={styles.sectionTitle}>
-              {user.isAdmin ? 'Все заказы' : 'Мои заказы'}
-            </Text>
+        {!user.isAdmin && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <ShoppingBag color="#333" size={20} />
+              <Text style={styles.sectionTitle}>Мои заказы</Text>
+            </View>
+            
+            {orders.length > 0 ? (
+              <ScrollView 
+                style={styles.ordersScrollView}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled
+              >
+                {orders.map(order => (
+                  <TouchableOpacity 
+                    key={order.id} 
+                    style={styles.orderCard}
+                    onPress={() => handleViewOrder(order)}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.orderHeader}>
+                      <Text style={styles.orderId}>Заказ #{order.id}</Text>
+                      <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) }]}>
+                        <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.orderDate}>
+                      {new Date(order.createdAt).toLocaleString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </Text>
+                    <Text style={styles.orderTotal}>{order.total} ₽</Text>
+                    
+                    {order.status === 'cancelled' && order.cancelReason && (
+                      <View style={styles.cancelledInfo}>
+                        <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={styles.emptyText}>Нет заказов</Text>
+            )}
           </View>
-          
-          {orders.length > 0 ? (
-            <ScrollView 
-              style={styles.ordersScrollView}
-              showsVerticalScrollIndicator={false}
-              nestedScrollEnabled
-            >
-              {orders.map(order => (
-                <TouchableOpacity 
-                  key={order.id} 
-                  style={styles.orderCard}
-                  onPress={() => handleViewOrder(order)}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>Заказ #{order.id}</Text>
-                    <View style={[styles.orderStatus, { backgroundColor: getStatusColor(order.status) }]}>
-                      <Text style={styles.orderStatusText}>{getStatusText(order.status)}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.orderDate}>
-                    {new Date(order.createdAt).toLocaleString('ru-RU', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </Text>
-                  <Text style={styles.orderTotal}>{order.total} ₽</Text>
-                  
-                  {user.isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
-                    <View style={styles.adminControls}>
-                      {order.status === 'pending' && (
-                        <TouchableOpacity
-                          style={styles.statusButton}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            updateOrderStatus(order.id, 'preparing');
-                          }}
-                        >
-                          <Text style={styles.statusButtonText}>Принять</Text>
-                        </TouchableOpacity>
-                      )}
-                      {order.status === 'preparing' && (
-                        <TouchableOpacity
-                          style={styles.statusButton}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            updateOrderStatus(order.id, 'ready');
-                          }}
-                        >
-                          <Text style={styles.statusButtonText}>Готов</Text>
-                        </TouchableOpacity>
-                      )}
-                      {order.status === 'ready' && (
-                        <TouchableOpacity
-                          style={styles.statusButton}
-                          onPress={(e) => {
-                            e.stopPropagation();
-                            updateOrderStatus(order.id, 'delivered');
-                          }}
-                        >
-                          <Text style={styles.statusButtonText}>Выдан</Text>
-                        </TouchableOpacity>
-                      )}
-                      <TouchableOpacity
-                        style={[styles.statusButton, styles.cancelButton]}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          Alert.alert(
-                            'Отмена заказа',
-                            'Укажите причину отмены',
-                            [
-                              { text: 'Отмена', style: 'cancel' },
-                              { 
-                                text: 'Ошибка в заказе', 
-                                onPress: () => cancelOrder(order.id, 'Ошибка в заказе')
-                              },
-                              { 
-                                text: 'Нет ингредиентов', 
-                                onPress: () => cancelOrder(order.id, 'Нет ингредиентов')
-                              },
-                              { 
-                                text: 'Другое', 
-                                onPress: () => cancelOrder(order.id, 'Отменено администратором')
-                              },
-                            ]
-                          );
-                        }}
-                      >
-                        <Text style={styles.cancelButtonText}>Отменить</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  
-                  {order.status === 'cancelled' && order.cancelReason && (
-                    <View style={styles.cancelledInfo}>
-                      <Text style={styles.cancelledReason}>Причина отмены: {order.cancelReason}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          ) : (
-            <Text style={styles.emptyText}>Нет заказов</Text>
-          )}
-        </View>
+        )}
       </ScrollView>
 
       <Modal
