@@ -6,6 +6,12 @@ import superjson from "superjson";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const currentUrl = window.location.origin;
+    console.log('🌐 Running on web, using current origin:', currentUrl);
+    return currentUrl;
+  }
+  
   const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   
   if (!baseUrl) {
@@ -13,6 +19,7 @@ const getBaseUrl = () => {
     return "https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app";
   }
   
+  console.log('📱 Running on mobile, using env URL:', baseUrl);
   return baseUrl;
 };
 

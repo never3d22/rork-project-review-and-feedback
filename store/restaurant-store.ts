@@ -299,7 +299,15 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     };
     
     let savedToDatabase = false;
-    const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
+    
+    const getApiBaseUrl = () => {
+      if (typeof window !== 'undefined') {
+        return window.location.origin;
+      }
+      return process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
+    };
+    
+    const baseUrl = getApiBaseUrl();
     
     try {
       console.log('\n🔄 Сохраняем заказ в базу данных...');
