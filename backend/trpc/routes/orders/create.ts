@@ -76,8 +76,10 @@ export default publicProcedure
       console.log('✅ [BACKEND] Order object prepared:', JSON.stringify(newOrder, null, 2));
       
       console.log('\n📝 [BACKEND] Step 2: Checking database connection...');
-      console.log('Database URL:', process.env.TURSO_DATABASE_URL ? 'SET' : 'NOT SET');
-      console.log('Auth Token:', process.env.TURSO_AUTH_TOKEN ? 'SET (length: ' + process.env.TURSO_AUTH_TOKEN.length + ')' : 'NOT SET');
+      const tursoUrl = process.env.STORAGE_TURSO_DATABASE_URL || process.env.TURSO_DATABASE_URL;
+      const tursoAuthToken = process.env.STORAGE_TURSO_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
+      console.log('Database URL:', tursoUrl ? 'SET' : 'NOT SET');
+      console.log('Auth Token:', tursoAuthToken ? 'SET (length: ' + tursoAuthToken?.length + ')' : 'NOT SET');
       
       console.log('\n📝 [BACKEND] Step 3: Inserting into database...');
       const insertResult = await db.insert(orders).values(newOrder);

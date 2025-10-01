@@ -25,17 +25,21 @@ app.use('*', cors({
 }));
 
 console.log('🔵 [HONO] Initializing Turso client');
-console.log('TURSO_DATABASE_URL:', process.env.TURSO_DATABASE_URL ? 'SET' : 'NOT SET');
-console.log('TURSO_AUTH_TOKEN:', process.env.TURSO_AUTH_TOKEN ? 'SET' : 'NOT SET');
 
-if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+const tursoUrl = process.env.STORAGE_TURSO_DATABASE_URL || process.env.TURSO_DATABASE_URL;
+const tursoAuthToken = process.env.STORAGE_TURSO_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
+
+console.log('TURSO_DATABASE_URL:', tursoUrl ? 'SET' : 'NOT SET');
+console.log('TURSO_AUTH_TOKEN:', tursoAuthToken ? 'SET' : 'NOT SET');
+
+if (!tursoUrl || !tursoAuthToken) {
   console.error('❌ [HONO] Missing Turso credentials!');
   throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in Vercel environment variables');
 }
 
 const client = createClient({
-  url: process.env.TURSO_DATABASE_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN,
+  url: tursoUrl,
+  authToken: tursoAuthToken,
 });
 
 console.log('✅ [HONO] Turso client initialized');
