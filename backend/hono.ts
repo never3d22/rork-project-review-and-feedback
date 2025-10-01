@@ -4,11 +4,27 @@ import { createClient } from '@libsql/client';
 
 const app = new Hono();
 
-app.use('*', cors());
+app.use('*', cors({
+  origin: (origin) => {
+    const allowed = [
+      'https://rork-project-review-and-feedback.vercel.app',
+      'http://localhost:8081'
+    ];
+    if (!origin || allowed.includes(origin) || 
+        origin.includes('vercel.app') || 
+        origin.includes('exp.direct')) {
+      return origin || '*';
+    }
+    return allowed[0];
+  },
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization']
+}));
 
 const client = createClient({
-  url: 'libsql://restaurant-app-never3d22.aws-eu-west-1.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTkyOTg2NjAsImlkIjoiNmFhZWM3NjQtYWI0MS00NTdlLTg3MjEtODY5ZjIyMDE5OTc5IiwicmlkIjoiMzc3MWNjMDAtNGNmMy00Y2FlLTk4ZjQtN2E1OWYxNTU4MGQ2In0.b2OyNKShbcaa7ae8LnhjHX0jSH0GFxk_J55isBqrQqG5rfAXrPBjOxmdAS5YKNzX511MA-OZdEqMzp-mC6f9Ag'
+  url: process.env.TURSO_DATABASE_URL || 'libsql://restaurant-app-never3d22.aws-eu-west-1.turso.io',
+  authToken: process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTkyOTg2NjAsImlkIjoiNmFhZWM3NjQtYWI0MS00NTdlLTg3MjEtODY5ZjIyMDE5OTc5IiwicmlkIjoiMzc3MWNjMDAtNGNmMy00Y2FlLTk4ZjQtN2E1OWYxNTU4MGQ2In0.b2OyNKShbcaa7ae8LnhjHX0jSH0GFxk_J55isBqrQqG5rfAXrPBjOxmdAS5YKNzX511MA-OZdEqMzp-mC6f9Ag'
 });
 
 app.get('/', (c) => c.text('API is working!'));
@@ -24,10 +40,11 @@ app.post('/order', async (c) => {
       INSERT INTO orders (items, total) VALUES (?, ?)
     `, [JSON.stringify(items), total]);
 
-    return c.json({ success: true, orderId: result.insertId });
+    return c.json({ success: true, orderId: result.lastInsertRowid?.toString() || 'unknown' });
   } catch (err) {
     console.error('Error saving order:', err);
-    return c.json({ success: false, error: err.message });
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return c.json({ success: false, error: errorMessage });
   }
 });
 
