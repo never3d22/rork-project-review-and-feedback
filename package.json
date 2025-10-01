@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "scripts": {
     "start": "bunx rork start -p 71bv7dsb86fbijua2xyis --tunnel",
+        "dev": "expo start",
+    "build": "expo export --platform web",
+    "vercel-build": "expo export --platform web",
     "start-web": "bunx rork start -p 71bv7dsb86fbijua2xyis --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p 71bv7dsb86fbijua2xyis --web --tunnel",
     "lint": "expo lint"
