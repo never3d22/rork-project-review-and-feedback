@@ -357,19 +357,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         deliveryType: newOrder.deliveryType,
       }, null, 2));
       
-      console.log('\n📝 [CLIENT] Step 1: Testing API health...');
-      const testResponse = await fetch(`${baseUrl}/api`, {
-        method: 'GET',
-      });
-      console.log('API Health Check Status:', testResponse.status);
-      console.log('API Health Check OK:', testResponse.ok);
-      
-      if (testResponse.ok) {
-        const healthData = await testResponse.json();
-        console.log('API Health Response:', healthData);
-      }
-      
-      console.log('\n📝 [CLIENT] Step 2: Preparing tRPC mutation...');
+      console.log('\n📝 [CLIENT] Preparing tRPC mutation...');
       const mutationData = {
         userId: newOrder.userId,
         userName: newOrder.userName,
@@ -386,7 +374,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       };
       console.log('Mutation data prepared:', JSON.stringify(mutationData, null, 2));
       
-      console.log('\n📝 [CLIENT] Step 3: Calling tRPC mutation...');
+      console.log('\n📝 [CLIENT] Calling tRPC mutation...');
       console.log('tRPC URL:', `${baseUrl}/api/trpc`);
       
       const result = await trpcClient.orders.create.mutate(mutationData);
