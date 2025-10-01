@@ -1,6 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { createClient } from '@libsql/client';
+import { trpcServer } from '@hono/trpc-server';
+import { appRouter } from './trpc/app-router';
+import { createContext } from './trpc/create-context';
 
 const app = new Hono();
 
@@ -27,7 +30,18 @@ const client = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTkyOTg2NjAsImlkIjoiNmFhZWM3NjQtYWI0MS00NTdlLTg3MjEtODY5ZjIyMDE5OTc5IiwicmlkIjoiMzc3MWNjMDAtNGNmMy00Y2FlLTk4ZjQtN2E1OWYxNTU4MGQ2In0.b2OyNKShbcaa7ae8LnhjHX0jSH0GFxk_J55isBqrQqG5rfAXrPBjOxmdAS5YKNzX511MA-OZdEqMzp-mC6f9Ag'
 });
 
-app.get('/', (c) => c.text('API is working!'));
+app.use(
+  '/trpc/*',
+  trpcServer({
+    router: appRouter,
+    createContext,
+  })
+);
+
+app.get('/', (c) => {
+  console.log('✅ Health check endpoint hit');
+  return c.json({ status: 'ok', message: 'API is working!' });
+});
 
 app.post('/order', async (c) => {
   try {

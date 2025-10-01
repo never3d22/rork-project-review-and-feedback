@@ -1,10 +1,10 @@
-import { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
+import type { Context as HonoContext } from "hono";
 
-export const createContext = async (opts: FetchCreateContextFnOptions) => {
+export const createContext = (c: HonoContext) => {
   return {
-    req: opts.req,
+    req: c.req,
   };
 };
 
@@ -15,7 +15,7 @@ const t = initTRPC.context<Context>().create({
 });
 
 const isAdmin = t.middleware(async ({ ctx, next }) => {
-  const authHeader = ctx.req.headers.get('authorization');
+  const authHeader = ctx.req.header('authorization');
   
   if (!authHeader || authHeader !== 'Bearer admin-token') {
     throw new Error('Unauthorized');
