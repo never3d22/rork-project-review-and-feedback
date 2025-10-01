@@ -56,23 +56,40 @@ export default function CheckoutScreen() {
     }
 
     try {
-      console.log('Creating order...');
+      console.log('\n🔵 [CHECKOUT] Creating order...');
+      console.log('Payment method selected:', paymentMethod);
+      console.log('Payment method type:', typeof paymentMethod);
+      console.log('Cart items:', cart.length);
+      console.log('Total:', getCartTotal());
+      
       if (deliveryAddress && deliveryAddress.trim()) {
         addAddress(deliveryAddress.trim());
       }
       
-      const newOrderId = await createOrder({
+      const orderData = {
         items: cart,
         total: getCartTotal(),
         utensils: needUtensils,
         utensilsCount: needUtensils ? cart.reduce((sum, item) => sum + item.quantity, 0) : 0,
         paymentMethod,
-        deliveryType: 'pickup',
+        deliveryType: 'pickup' as const,
         comments,
         deliveryAddress: deliveryAddress || undefined,
-      });
+      };
       
-      console.log('Order created successfully, ID:', newOrderId);
+      console.log('\n🔵 [CHECKOUT] Order data prepared:', JSON.stringify({
+        itemsCount: orderData.items.length,
+        total: orderData.total,
+        paymentMethod: orderData.paymentMethod,
+        deliveryType: orderData.deliveryType,
+        utensils: orderData.utensils,
+        utensilsCount: orderData.utensilsCount,
+        comments: orderData.comments,
+      }, null, 2));
+      
+      const newOrderId = await createOrder(orderData);
+      
+      console.log('\n✅ [CHECKOUT] Order created successfully, ID:', newOrderId);
       setOrderId(newOrderId);
       setShowSuccessModal(true);
     } catch (error: any) {

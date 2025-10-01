@@ -39,7 +39,22 @@ export default publicProcedure
     console.log('Input data:', JSON.stringify(input, null, 2));
     
     try {
-      console.log('\n📝 [BACKEND] Step 1: Preparing order object...');
+      console.log('\n📝 [BACKEND] Step 1: Validating input fields...');
+      console.log('paymentMethod type:', typeof input.paymentMethod);
+      console.log('paymentMethod value:', input.paymentMethod);
+      console.log('paymentMethod is null?', input.paymentMethod === null);
+      console.log('paymentMethod is undefined?', input.paymentMethod === undefined);
+      console.log('deliveryType type:', typeof input.deliveryType);
+      console.log('deliveryType value:', input.deliveryType);
+      
+      if (!input.paymentMethod) {
+        throw new Error('paymentMethod is required but was: ' + input.paymentMethod);
+      }
+      if (!input.deliveryType) {
+        throw new Error('deliveryType is required but was: ' + input.deliveryType);
+      }
+      
+      console.log('\n📝 [BACKEND] Step 2: Preparing order object...');
       
       const newOrder = {
         id: Date.now().toString(),

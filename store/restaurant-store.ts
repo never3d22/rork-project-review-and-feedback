@@ -288,6 +288,17 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   }, [cart]);
 
   const createOrder = useCallback(async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
+    console.log('\n🔍 [STORE] createOrder called with:', JSON.stringify({
+      itemsCount: orderData.items.length,
+      total: orderData.total,
+      paymentMethod: orderData.paymentMethod,
+      deliveryType: orderData.deliveryType,
+      utensils: orderData.utensils,
+      utensilsCount: orderData.utensilsCount,
+      comments: orderData.comments,
+      deliveryAddress: orderData.deliveryAddress,
+    }, null, 2));
+    
     const newOrder: Order = {
       ...orderData,
       id: Date.now().toString(),
@@ -297,6 +308,16 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       userName: user?.name,
       userPhone: user?.phone,
     };
+    
+    console.log('\n🔍 [STORE] newOrder created:', JSON.stringify({
+      id: newOrder.id,
+      paymentMethod: newOrder.paymentMethod,
+      deliveryType: newOrder.deliveryType,
+      total: newOrder.total,
+      userId: newOrder.userId,
+      userName: newOrder.userName,
+      userPhone: newOrder.userPhone,
+    }, null, 2));
     
     let savedToDatabase = false;
     
