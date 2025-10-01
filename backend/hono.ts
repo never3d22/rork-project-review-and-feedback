@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { createClient } from '@libsql/client';
 import { trpcServer } from '@hono/trpc-server';
 import { appRouter } from './trpc/app-router';
+import { db } from './db/client';
+import { orders } from './db/schema';
 
 const app = new Hono();
 
@@ -24,25 +25,8 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization']
 }));
 
-console.log('🔵 [HONO] Initializing Turso client');
-
-const tursoUrl = process.env.STORAGE_TURSO_DATABASE_URL || process.env.TURSO_DATABASE_URL;
-const tursoAuthToken = process.env.STORAGE_TURSO_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
-
-console.log('TURSO_DATABASE_URL:', tursoUrl ? 'SET' : 'NOT SET');
-console.log('TURSO_AUTH_TOKEN:', tursoAuthToken ? 'SET' : 'NOT SET');
-
-if (!tursoUrl || !tursoAuthToken) {
-  console.error('❌ [HONO] Missing Turso credentials!');
-  throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in Vercel environment variables');
-}
-
-const client = createClient({
-  url: tursoUrl,
-  authToken: tursoAuthToken,
-});
-
-console.log('✅ [HONO] Turso client initialized');
+console.log('🔵 [HONO] Using MySQL database from Beget');
+console.log('✅ [HONO] Database client initialized');
 
 app.use(
   '/trpc/*',
@@ -64,13 +48,26 @@ app.post('/order', async (c) => {
     const body = await c.req.json();
     console.log('Received order:', body);
 
-    // Сохраняем заказ в Turso
-    const { items, total } = body;
-    const result = await client.execute(`
-      INSERT INTO orders (items, total) VALUES (?, ?)
-    `, [JSON.stringify(items), total]);
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await db.insert(orders).values({
+      id: orderId,
+      userId: body.userId || null,
+      userName: body.userName || null,
+      userPhone: body.userPhone || null,
+      items: JSON.stringify(body.items),
+      total: body.total.toString(),
+      utensils: body.utensils || false,
+      utensilsCount: body.utensilsCount || 0,
+      paymentMethod: body.paymentMethod || 'cash',
+      deliveryType: body.deliveryType || 'delivery',
+      deliveryAddress: body.deliveryAddress || null,
+      deliveryTime: body.deliveryTime || null,
+      comments: body.comments || null,
+      status: 'pending',
+    });
 
-    return c.json({ success: true, orderId: result.lastInsertRowid?.toString() || 'unknown' });
+    return c.json({ success: true, orderId });
   } catch (err) {
     console.error('Error saving order:', err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
