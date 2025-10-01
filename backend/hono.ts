@@ -24,10 +24,21 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization']
 }));
 
+console.log('🔵 [HONO] Initializing Turso client');
+console.log('TURSO_DATABASE_URL:', process.env.TURSO_DATABASE_URL ? 'SET' : 'NOT SET');
+console.log('TURSO_AUTH_TOKEN:', process.env.TURSO_AUTH_TOKEN ? 'SET' : 'NOT SET');
+
+if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+  console.error('❌ [HONO] Missing Turso credentials!');
+  throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set in Vercel environment variables');
+}
+
 const client = createClient({
-  url: process.env.TURSO_DATABASE_URL || 'libsql://restaurant-app-never3d22.aws-eu-west-1.turso.io',
-  authToken: process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTkyOTg2NjAsImlkIjoiNmFhZWM3NjQtYWI0MS00NTdlLTg3MjEtODY5ZjIyMDE5OTc5IiwicmlkIjoiMzc3MWNjMDAtNGNmMy00Y2FlLTk4ZjQtN2E1OWYxNTU4MGQ2In0.b2OyNKShbcaa7ae8LnhjHX0jSH0GFxk_J55isBqrQqG5rfAXrPBjOxmdAS5YKNzX511MA-OZdEqMzp-mC6f9Ag'
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
+
+console.log('✅ [HONO] Turso client initialized');
 
 app.use(
   '/trpc/*',
