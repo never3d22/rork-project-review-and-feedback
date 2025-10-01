@@ -313,6 +313,11 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       
       console.log('API URL:', `${baseUrl}/api/trpc`);
       
+      const testResponse = await fetch(`${baseUrl}/api`, {
+        method: 'GET',
+      });
+      console.log('API Health Check:', testResponse.status, testResponse.ok);
+      
       const result = await trpcClient.orders.create.mutate({
         userId: newOrder.userId,
         userName: newOrder.userName,
@@ -345,6 +350,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         console.error('1. URL API:', baseUrl);
         console.error('2. Доступность сервера');
         console.error('3. CORS настройки');
+        console.error('4. Переменные окружения на Vercel');
       }
       
       console.log('⚠️ Заказ будет сохранен локально');
@@ -356,8 +362,10 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       console.log('📝 Заказ сохранен только локально. Требуется настройка backend на Vercel.');
     }
     
+    clearCart();
+    
     return newOrder.id;
-  }, [user]);
+  }, [user, clearCart]);
 
   const updateOrderStatus = useCallback((orderId: string, status: Order['status']) => {
     setOrders(prevOrders =>

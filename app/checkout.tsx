@@ -30,6 +30,7 @@ export default function CheckoutScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
 
   const paymentOptions = [
@@ -74,8 +75,15 @@ export default function CheckoutScreen() {
       console.log('Order created successfully, ID:', newOrderId);
       setOrderId(newOrderId);
       setShowSuccessModal(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating order:', error);
+      
+      if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+        setErrorMessage('Проблема с подключением к серверу. Заказ сохранен локально и будет обработан позже.');
+      } else {
+        setErrorMessage('Произошла ошибка при оформлении заказа. Попробуйте еще раз.');
+      }
+      
       setShowErrorModal(true);
     }
   };
@@ -219,10 +227,9 @@ export default function CheckoutScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Ошибка</Text>
+            <Text style={styles.modalTitle}>Внимание</Text>
             <Text style={styles.modalText}>
-              Произошла ошибка при оформлении заказа.
-              Попробуйте еще раз.
+              {errorMessage || 'Произошла ошибка при оформлении заказа. Попробуйте еще раз.'}
             </Text>
             <TouchableOpacity
               style={styles.modalButton}
