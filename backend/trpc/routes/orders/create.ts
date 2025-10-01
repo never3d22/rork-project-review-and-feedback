@@ -32,15 +32,14 @@ export default publicProcedure
     comments: z.string(),
   }))
   .mutation(async ({ input }) => {
+    console.log('\n========================================');
+    console.log('🔵 [BACKEND] Order creation started');
+    console.log('========================================');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Input data:', JSON.stringify(input, null, 2));
+    
     try {
-      console.log('📝 Creating order in database...');
-      console.log('Order data:', JSON.stringify({
-        userId: input.userId,
-        userName: input.userName,
-        userPhone: input.userPhone,
-        itemsCount: input.items.length,
-        total: input.total,
-      }, null, 2));
+      console.log('\n📝 [BACKEND] Step 1: Preparing order object...');
       
       const newOrder = {
         id: Date.now().toString(),
@@ -59,17 +58,41 @@ export default publicProcedure
         status: 'pending',
       };
       
-      console.log('Inserting order into database...');
-      await db.insert(orders).values(newOrder);
-      console.log('✅ Order inserted successfully!');
+      console.log('✅ [BACKEND] Order object prepared:', JSON.stringify(newOrder, null, 2));
       
-      return {
+      console.log('\n📝 [BACKEND] Step 2: Checking database connection...');
+      console.log('Database URL:', process.env.TURSO_DATABASE_URL ? 'SET' : 'NOT SET');
+      console.log('Auth Token:', process.env.TURSO_AUTH_TOKEN ? 'SET (length: ' + process.env.TURSO_AUTH_TOKEN.length + ')' : 'NOT SET');
+      
+      console.log('\n📝 [BACKEND] Step 3: Inserting into database...');
+      const insertResult = await db.insert(orders).values(newOrder);
+      console.log('✅ [BACKEND] Insert result:', insertResult);
+      
+      console.log('\n📝 [BACKEND] Step 4: Verifying insertion...');
+      const allOrders = await db.select().from(orders);
+      console.log('✅ [BACKEND] Total orders in DB:', allOrders.length);
+      console.log('Latest order:', allOrders[allOrders.length - 1]);
+      
+      const response = {
         ...newOrder,
         items: input.items,
         createdAt: new Date(),
       };
-    } catch (error) {
-      console.error('❌ Error creating order:', error);
+      
+      console.log('\n✅ [BACKEND] Order created successfully!');
+      console.log('Response:', JSON.stringify(response, null, 2));
+      console.log('========================================\n');
+      
+      return response;
+    } catch (error: any) {
+      console.error('\n========================================');
+      console.error('❌ [BACKEND] Error creating order');
+      console.error('========================================');
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('========================================\n');
       throw error;
     }
   });

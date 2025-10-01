@@ -310,23 +310,35 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     const baseUrl = getApiBaseUrl();
     
     try {
-      console.log('\n🔄 Сохраняем заказ в базу данных...');
-      console.log('Данные заказа:', JSON.stringify({
+      console.log('\n========================================');
+      console.log('🔵 [CLIENT] Starting order creation');
+      console.log('========================================');
+      console.log('Timestamp:', new Date().toISOString());
+      console.log('Base URL:', baseUrl);
+      console.log('Order data:', JSON.stringify({
         userId: newOrder.userId,
         userName: newOrder.userName,
         userPhone: newOrder.userPhone,
         itemsCount: newOrder.items.length,
         total: newOrder.total,
+        paymentMethod: newOrder.paymentMethod,
+        deliveryType: newOrder.deliveryType,
       }, null, 2));
       
-      console.log('API URL:', `${baseUrl}/api/trpc`);
-      
+      console.log('\n📝 [CLIENT] Step 1: Testing API health...');
       const testResponse = await fetch(`${baseUrl}/api`, {
         method: 'GET',
       });
-      console.log('API Health Check:', testResponse.status, testResponse.ok);
+      console.log('API Health Check Status:', testResponse.status);
+      console.log('API Health Check OK:', testResponse.ok);
       
-      const result = await trpcClient.orders.create.mutate({
+      if (testResponse.ok) {
+        const healthData = await testResponse.json();
+        console.log('API Health Response:', healthData);
+      }
+      
+      console.log('\n📝 [CLIENT] Step 2: Preparing tRPC mutation...');
+      const mutationData = {
         userId: newOrder.userId,
         userName: newOrder.userName,
         userPhone: newOrder.userPhone,
@@ -339,29 +351,41 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         deliveryAddress: newOrder.deliveryAddress,
         deliveryTime: newOrder.deliveryTime,
         comments: newOrder.comments || '',
-      });
+      };
+      console.log('Mutation data prepared:', JSON.stringify(mutationData, null, 2));
+      
+      console.log('\n📝 [CLIENT] Step 3: Calling tRPC mutation...');
+      console.log('tRPC URL:', `${baseUrl}/api/trpc`);
+      
+      const result = await trpcClient.orders.create.mutate(mutationData);
       
       savedToDatabase = true;
-      console.log('✅ Заказ успешно сохранен в базу данных!');
-      console.log('Результат:', result);
+      console.log('\n✅ [CLIENT] Order saved to database successfully!');
+      console.log('Result:', JSON.stringify(result, null, 2));
+      console.log('========================================\n');
     } catch (error: any) {
-      console.error('❌ Ошибка при сохранении заказа в базу данных:', error);
-      console.error('Детали ошибки:', {
-        message: error?.message,
-        cause: error?.cause,
-        name: error?.name,
-        stack: error?.stack,
-      });
+      console.error('\n========================================');
+      console.error('❌ [CLIENT] Error saving order to database');
+      console.error('========================================');
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error cause:', error?.cause);
+      console.error('Error name:', error?.name);
+      console.error('Error stack:', error?.stack);
+      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
       
       if (error?.message?.includes('fetch')) {
-        console.error('⚠️ Проблема с сетевым подключением. Проверьте:');
-        console.error('1. URL API:', baseUrl);
-        console.error('2. Доступность сервера');
-        console.error('3. CORS настройки');
-        console.error('4. Переменные окружения на Vercel');
+        console.error('\n⚠️ [CLIENT] Network connection issue detected');
+        console.error('Checklist:');
+        console.error('1. API URL:', baseUrl);
+        console.error('2. Server availability');
+        console.error('3. CORS settings');
+        console.error('4. Vercel environment variables');
+        console.error('5. Network connectivity');
       }
       
-      console.log('⚠️ Заказ будет сохранен локально');
+      console.error('\n⚠️ [CLIENT] Order will be saved locally only');
+      console.error('========================================\n');
     }
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
