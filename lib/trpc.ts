@@ -6,21 +6,22 @@ import superjson from "superjson";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
+  const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  
+  if (envUrl && envUrl.trim()) {
+    console.log('🔑 Using EXPO_PUBLIC_RORK_API_BASE_URL:', envUrl);
+    return envUrl;
+  }
+  
   if (typeof window !== 'undefined') {
     const currentUrl = window.location.origin;
     console.log('🌐 Running on web, using current origin:', currentUrl);
     return currentUrl;
   }
   
-  const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  
-  if (!baseUrl) {
-    console.error("EXPO_PUBLIC_RORK_API_BASE_URL is not set");
-    return "https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app";
-  }
-  
-  console.log('📱 Running on mobile, using env URL:', baseUrl);
-  return baseUrl;
+  const fallbackUrl = "https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app";
+  console.error("⚠️ EXPO_PUBLIC_RORK_API_BASE_URL is not set, using fallback:", fallbackUrl);
+  return fallbackUrl;
 };
 
 export const trpcClient = trpc.createClient({
