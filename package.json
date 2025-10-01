@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "bunx rork start -p 71bv7dsb86fbijua2xyis --tunnel",
-        "dev": "expo start",
+    "dev": "expo start",
     "build": "expo export --platform web",
     "vercel-build": "expo export --platform web",
     "start-web": "bunx rork start -p 71bv7dsb86fbijua2xyis --web --tunnel",
@@ -46,6 +46,7 @@
     "expo-web-browser": "^14.2.0",
     "hono": "^4.9.9",
     "lucide-react-native": "^0.475.0",
+    "mysql2": "^3.15.1",
     "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-dom": "19.0.0",

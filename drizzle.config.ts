@@ -3,9 +3,12 @@ import type { Config } from 'drizzle-kit';
 export default {
   schema: './backend/db/schema.ts',
   out: './backend/db/migrations',
-  dialect: 'turso',
+  dialect: 'mysql',
   dbCredentials: {
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
+    host: process.env.DATABASE_HOST!,
+    user: process.env.DATABASE_USER!,
+    password: process.env.DATABASE_PASSWORD!,
+    database: process.env.DATABASE_NAME!,
+    port: parseInt(process.env.DATABASE_PORT || '3306'),
   },
 } satisfies Config;

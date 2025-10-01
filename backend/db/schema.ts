@@ -1,81 +1,80 @@
-import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+import { mysqlTable, varchar, int, decimal, boolean, timestamp, text } from 'drizzle-orm/mysql-core';
 
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  email: text('email').notNull(),
-  phone: text('phone'),
-  birthday: text('birthday'),
-  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+export const users = mysqlTable('users', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  birthday: varchar('birthday', { length: 50 }),
+  isAdmin: boolean('is_admin').notNull().default(false),
   addresses: text('addresses'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const categories = sqliteTable('categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  order: integer('order').notNull(),
-  visible: integer('visible', { mode: 'boolean' }).notNull().default(true),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+export const categories = mysqlTable('categories', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  order: int('order').notNull(),
+  visible: boolean('visible').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const dishes = sqliteTable('dishes', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
+export const dishes = mysqlTable('dishes', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
   description: text('description').notNull(),
-  price: real('price').notNull(),
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   image: text('image').notNull(),
-  category: text('category').notNull(),
-  available: integer('available', { mode: 'boolean' }).notNull().default(true),
-  weight: text('weight'),
+  category: varchar('category', { length: 255 }).notNull(),
+  available: boolean('available').notNull().default(true),
+  weight: varchar('weight', { length: 100 }),
   ingredients: text('ingredients'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const orders = sqliteTable('orders', {
-  id: text('id').primaryKey(),
-  userId: text('user_id'),
-  userName: text('user_name'),
-  userPhone: text('user_phone'),
+export const orders = mysqlTable('orders', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  userId: varchar('user_id', { length: 255 }),
+  userName: varchar('user_name', { length: 255 }),
+  userPhone: varchar('user_phone', { length: 50 }),
   items: text('items').notNull(),
-  total: real('total').notNull(),
-  utensils: integer('utensils', { mode: 'boolean' }).notNull().default(false),
-  utensilsCount: integer('utensils_count').notNull().default(0),
-  paymentMethod: text('payment_method').notNull(),
-  deliveryType: text('delivery_type').notNull(),
+  total: decimal('total', { precision: 10, scale: 2 }).notNull(),
+  utensils: boolean('utensils').notNull().default(false),
+  utensilsCount: int('utensils_count').notNull().default(0),
+  paymentMethod: varchar('payment_method', { length: 100 }).notNull(),
+  deliveryType: varchar('delivery_type', { length: 100 }).notNull(),
   deliveryAddress: text('delivery_address'),
-  deliveryTime: text('delivery_time'),
+  deliveryTime: varchar('delivery_time', { length: 100 }),
   comments: text('comments'),
-  status: text('status').notNull().default('pending'),
+  status: varchar('status', { length: 50 }).notNull().default('pending'),
   cancelReason: text('cancel_reason'),
-  cancelledAt: integer('cancelled_at', { mode: 'timestamp' }),
-  paymentStatus: text('payment_status'),
-  paymentId: text('payment_id'),
+  cancelledAt: timestamp('cancelled_at'),
+  paymentStatus: varchar('payment_status', { length: 50 }),
+  paymentId: varchar('payment_id', { length: 255 }),
   paymentUrl: text('payment_url'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const restaurant = sqliteTable('restaurant', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
+export const restaurant = mysqlTable('restaurant', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
   address: text('address').notNull(),
-  phone: text('phone').notNull(),
-  workingHours: text('working_hours').notNull(),
-  deliveryTime: text('delivery_time').notNull(),
-  pickupTime: text('pickup_time').notNull(),
-  deliveryMinTime: integer('delivery_min_time').notNull(),
-  deliveryMaxTime: integer('delivery_max_time').notNull(),
-  pickupMinTime: integer('pickup_min_time').notNull(),
-  pickupMaxTime: integer('pickup_max_time').notNull(),
+  phone: varchar('phone', { length: 50 }).notNull(),
+  workingHours: varchar('working_hours', { length: 255 }).notNull(),
+  deliveryTime: varchar('delivery_time', { length: 255 }).notNull(),
+  pickupTime: varchar('pickup_time', { length: 255 }).notNull(),
+  deliveryMinTime: int('delivery_min_time').notNull(),
+  deliveryMaxTime: int('delivery_max_time').notNull(),
+  pickupMinTime: int('pickup_min_time').notNull(),
+  pickupMaxTime: int('pickup_max_time').notNull(),
   logo: text('logo'),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const smsCodes = sqliteTable('sms_codes', {
-  id: text('id').primaryKey(),
-  phone: text('phone').notNull(),
-  code: text('code').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+export const smsCodes = mysqlTable('sms_codes', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  phone: varchar('phone', { length: 50 }).notNull(),
+  code: varchar('code', { length: 10 }).notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
