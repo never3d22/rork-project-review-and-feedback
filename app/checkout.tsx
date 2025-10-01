@@ -76,6 +76,7 @@ export default function CheckoutScreen() {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating order:', error);
+      setShowErrorModal(true);
     }
   };
 

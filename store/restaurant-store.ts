@@ -299,15 +299,21 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     };
     
     let savedToDatabase = false;
+    const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
     
     try {
       console.log('\n🔄 Сохраняем заказ в базу данных...');
-      console.log('Данные заказа:', JSON.stringify(newOrder, null, 2));
+      console.log('Данные заказа:', JSON.stringify({
+        userId: newOrder.userId,
+        userName: newOrder.userName,
+        userPhone: newOrder.userPhone,
+        itemsCount: newOrder.items.length,
+        total: newOrder.total,
+      }, null, 2));
       
-      const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
       console.log('API URL:', `${baseUrl}/api/trpc`);
       
-      await trpcClient.orders.create.mutate({
+      const result = await trpcClient.orders.create.mutate({
         userId: newOrder.userId,
         userName: newOrder.userName,
         userPhone: newOrder.userPhone,
@@ -324,13 +330,22 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       
       savedToDatabase = true;
       console.log('✅ Заказ успешно сохранен в базу данных!');
+      console.log('Результат:', result);
     } catch (error: any) {
       console.error('❌ Ошибка при сохранении заказа в базу данных:', error);
       console.error('Детали ошибки:', {
         message: error?.message,
         cause: error?.cause,
         name: error?.name,
+        stack: error?.stack,
       });
+      
+      if (error?.message?.includes('fetch')) {
+        console.error('⚠️ Проблема с сетевым подключением. Проверьте:');
+        console.error('1. URL API:', baseUrl);
+        console.error('2. Доступность сервера');
+        console.error('3. CORS настройки');
+      }
       
       console.log('⚠️ Заказ будет сохранен локально');
     }
