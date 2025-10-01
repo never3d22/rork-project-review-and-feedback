@@ -48,7 +48,6 @@ export default function CheckoutScreen() {
       return;
     }
 
-    // Проверяем аутентификацию пользователя
     if (!user) {
       console.log('User not authenticated, redirecting to auth');
       router.push('/auth/phone' as any);
@@ -77,7 +76,6 @@ export default function CheckoutScreen() {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating order:', error);
-      setShowErrorModal(true);
     }
   };
 

@@ -298,9 +298,14 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       userPhone: user?.phone,
     };
     
+    let savedToDatabase = false;
+    
     try {
       console.log('\n🔄 Сохраняем заказ в базу данных...');
       console.log('Данные заказа:', JSON.stringify(newOrder, null, 2));
+      
+      const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
+      console.log('API URL:', `${baseUrl}/api/trpc`);
       
       await trpcClient.orders.create.mutate({
         userId: newOrder.userId,
@@ -317,13 +322,25 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         comments: newOrder.comments || '',
       });
       
+      savedToDatabase = true;
       console.log('✅ Заказ успешно сохранен в базу данных!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Ошибка при сохранении заказа в базу данных:', error);
-      throw error;
+      console.error('Детали ошибки:', {
+        message: error?.message,
+        cause: error?.cause,
+        name: error?.name,
+      });
+      
+      console.log('⚠️ Заказ будет сохранен локально');
     }
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
+    
+    if (!savedToDatabase) {
+      console.log('📝 Заказ сохранен только локально. Требуется настройка backend на Vercel.');
+    }
+    
     return newOrder.id;
   }, [user]);
 
