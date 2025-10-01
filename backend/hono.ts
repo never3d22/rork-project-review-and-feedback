@@ -13,7 +13,20 @@ const app = new Hono();
 console.log('✅ [HONO] Hono app created');
 
 app.use("*", cors({
-  origin: '*',
+  origin: (origin) => {
+    const allowedOrigins = [
+      'https://rork-project-review-and-feedback.vercel.app',
+      'https://rork-project-review-and-feedback-pwy6lkx1a.vercel.app',
+      'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app',
+      'http://localhost:8081',
+      'http://localhost:19006',
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin) || origin.includes('rork-project-review-and-feedback')) {
+      return origin || '*';
+    }
+    return allowedOrigins[0];
+  },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   exposeHeaders: ['Content-Length'],
