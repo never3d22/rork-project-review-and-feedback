@@ -1,8 +1,20 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import { Audio } from 'expo-av';
 import { CartItem, Dish, Order, User, Restaurant, Category } from '@/types/restaurant';
 import { MOCK_DISHES, MOCK_CATEGORIES } from '@/constants/dishes';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
@@ -61,6 +73,9 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     pickupMaxTime: 35,
     logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/i3drirnswip2jkkao4snr',
   });
+  
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const previousOrdersCountRef = useRef<number>(0);
 
   // Load restaurant data from storage on mount
   useEffect(() => {
@@ -99,6 +114,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
             createdAt: new Date(order.createdAt),
           }));
           setOrders(parsedOrders);
+          previousOrdersCountRef.current = parsedOrders.length;
         }
         if (userData) {
           setUser(JSON.parse(userData));
@@ -120,6 +136,104 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   useEffect(() => {
     storage.setItem('orders', JSON.stringify(orders));
   }, [orders]);
+  
+  const playNotificationSound = useCallback(async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+      }
+      
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3' },
+        { shouldPlay: true, volume: 1.0 }
+      );
+      
+      soundRef.current = sound;
+      
+      sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (status.isLoaded && status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.log('Error playing notification sound:', error);
+    }
+  }, []);
+  
+  const sendNotification = useCallback(async (order: Order) => {
+    try {
+      if (Platform.OS === 'web') {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Новый заказ!', {
+            body: `Заказ #${order.id} на сумму ${order.total} ₽`,
+            icon: restaurant.logo,
+            tag: order.id,
+          });
+        } else if ('Notification' in window && Notification.permission !== 'denied') {
+          await Notification.requestPermission();
+        }
+      } else {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Новый заказ!',
+            body: `Заказ #${order.id} на сумму ${order.total} ₽`,
+            data: { orderId: order.id },
+            sound: true,
+          },
+          trigger: null,
+        });
+      }
+    } catch (error) {
+      console.log('Error sending notification:', error);
+    }
+  }, [restaurant.logo]);
+  
+  // Setup notifications
+  useEffect(() => {
+    const setupNotifications = async () => {
+      if (Platform.OS !== 'web') {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        
+        if (finalStatus !== 'granted') {
+          console.log('Failed to get push token for push notification!');
+          return;
+        }
+      }
+    };
+    
+    setupNotifications();
+  }, []);
+  
+  // Monitor new orders and send notifications
+  useEffect(() => {
+    const checkNewOrders = async () => {
+      if (!user?.isAdmin) return;
+      
+      const currentOrdersCount = orders.length;
+      const previousCount = previousOrdersCountRef.current;
+      
+      if (currentOrdersCount > previousCount && previousCount > 0) {
+        const newOrders = orders.slice(0, currentOrdersCount - previousCount);
+        
+        for (const order of newOrders) {
+          if (order.status === 'pending') {
+            await playNotificationSound();
+            await sendNotification(order);
+          }
+        }
+      }
+      
+      previousOrdersCountRef.current = currentOrdersCount;
+    };
+    
+    checkNewOrders();
+  }, [orders, user, playNotificationSound, sendNotification]);
 
   // Save user to storage whenever it changes
   useEffect(() => {

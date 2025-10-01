@@ -261,15 +261,6 @@ export default function AdminScreen() {
                   >
                     <View style={styles.orderHeader}>
                       <Text style={styles.orderId}>Заказ #{order.id}</Text>
-                      <TouchableOpacity
-                        style={styles.viewButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleViewOrder(order);
-                        }}
-                      >
-                        <Eye color="#9a4759" size={16} />
-                      </TouchableOpacity>
                     </View>
                     
                     <Text style={styles.orderDate}>
@@ -460,12 +451,14 @@ export default function AdminScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={['#9a4759', '#b85a6e']}
         style={styles.header}
       >
-        <Text style={styles.headerTitle}>Админ панель</Text>
+        <SafeAreaView edges={['top']}>
+          <Text style={styles.headerTitle}>Админ панель</Text>
+        </SafeAreaView>
       </LinearGradient>
       
       <View style={styles.tabBar}>
@@ -1064,7 +1057,7 @@ export default function AdminScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -1075,13 +1068,14 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingBottom: 20,
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold' as const,
     color: '#fff',
+    paddingVertical: 12,
   },
   tabBar: {
     flexDirection: 'row',
@@ -1226,18 +1220,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 8,
   },
   orderId: {
     fontSize: 16,
     fontWeight: 'bold' as const,
     color: '#333',
-  },
-  viewButton: {
-    padding: 4,
   },
   orderDate: {
     fontSize: 14,
