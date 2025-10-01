@@ -20,7 +20,7 @@ import {
 import { router } from 'expo-router';
 import { useRestaurant } from '@/store/restaurant-store';
 
-type PaymentMethod = 'card' | 'cash' | 'online';
+type PaymentMethod = 'card' | 'cash' | 'sberpay' | 'sbp';
 
 export default function CheckoutScreen() {
   const { cart, getCartTotal, createOrder, user, addAddress } = useRestaurant();
@@ -35,10 +35,11 @@ export default function CheckoutScreen() {
   const paymentOptions = [
     { id: 'card' as PaymentMethod, title: 'Банковская карта', icon: CreditCard },
     { id: 'cash' as PaymentMethod, title: 'Наличные', icon: Banknote },
-    { id: 'online' as PaymentMethod, title: 'Онлайн оплата', icon: Smartphone },
+    { id: 'sberpay' as PaymentMethod, title: 'SberPay', icon: Smartphone },
+    { id: 'sbp' as PaymentMethod, title: 'СБП', icon: CreditCard },
   ];
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     console.log('handlePlaceOrder called, cart length:', cart.length);
     
     if (cart.length === 0) {
@@ -60,7 +61,7 @@ export default function CheckoutScreen() {
         addAddress(deliveryAddress.trim());
       }
       
-      const newOrderId = createOrder({
+      const newOrderId = await createOrder({
         items: cart,
         total: getCartTotal(),
         utensils: needUtensils,

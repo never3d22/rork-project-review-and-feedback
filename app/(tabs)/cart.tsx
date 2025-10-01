@@ -548,7 +548,7 @@ export default function CartScreen() {
       
       console.log('✅ Оплата успешна, создаем заказ...');
       
-      const newOrderId = createOrder({
+      const newOrderId = await createOrder({
         items: cart,
         total: getCartTotal(),
         utensils: utensilsCount > 0,

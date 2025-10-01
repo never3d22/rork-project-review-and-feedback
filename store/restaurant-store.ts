@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { Audio } from 'expo-av';
 import { CartItem, Dish, Order, User, Restaurant, Category } from '@/types/restaurant';
 import { MOCK_DISHES, MOCK_CATEGORIES } from '@/constants/dishes';
+import { trpcClient } from '@/lib/trpc';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -282,7 +283,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     return cart.reduce((total, item) => total + item.dish.price * item.quantity, 0);
   }, [cart]);
 
-  const createOrder = useCallback((orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
+  const createOrder = useCallback(async (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => {
     const newOrder: Order = {
       ...orderData,
       id: Date.now().toString(),
@@ -292,6 +293,31 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
       userName: user?.name,
       userPhone: user?.phone,
     };
+    
+    try {
+      console.log('\n🔄 Сохраняем заказ в базу данных...');
+      console.log('Данные заказа:', JSON.stringify(newOrder, null, 2));
+      
+      await trpcClient.orders.create.mutate({
+        userId: newOrder.userId,
+        userName: newOrder.userName,
+        userPhone: newOrder.userPhone,
+        items: newOrder.items,
+        total: newOrder.total,
+        utensils: newOrder.utensils,
+        utensilsCount: newOrder.utensilsCount,
+        paymentMethod: newOrder.paymentMethod,
+        deliveryType: newOrder.deliveryType,
+        deliveryAddress: newOrder.deliveryAddress,
+        deliveryTime: newOrder.deliveryTime,
+        comments: newOrder.comments || '',
+      });
+      
+      console.log('✅ Заказ успешно сохранен в базу данных!');
+    } catch (error) {
+      console.error('❌ Ошибка при сохранении заказа в базу данных:', error);
+      throw error;
+    }
     
     setOrders(prevOrders => [newOrder, ...prevOrders]);
     return newOrder.id;
