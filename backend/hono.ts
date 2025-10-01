@@ -38,18 +38,6 @@ app.get("/", (c) => {
   return c.json({ status: "ok", message: "API is running" });
 });
 
-app.get("/api", (c) => {
-  console.log('📍 [HONO] /api endpoint hit');
-  return c.json({ status: "ok", message: "API is running" });
-});
-
-app.all("/trpc/*", (c) => {
-  console.log('📍 [HONO] tRPC endpoint hit:', c.req.url);
-  console.log('Method:', c.req.method);
-  console.log('Headers:', Object.fromEntries(c.req.raw.headers.entries()));
-  return c.json({ error: "This should be handled by tRPC middleware" }, 500);
-});
-
 console.log('✅ [HONO] Server initialization complete');
 console.log('========================================\n');
 
