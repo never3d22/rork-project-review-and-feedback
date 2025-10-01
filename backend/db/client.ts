@@ -9,8 +9,8 @@ console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('Platform:', process.platform);
 console.log('All env vars:', Object.keys(process.env).filter(k => k.includes('TURSO')).join(', '));
 
-const tursoUrl = process.env.STORAGE_URL || process.env.TURSO_DATABASE_URL;
-const tursoAuthToken = process.env.STORAGE_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
+const tursoUrl = process.env.STORAGE_TURSO_DATABASE_URL || process.env.TURSO_DATABASE_URL;
+const tursoAuthToken = process.env.STORAGE_TURSO_AUTH_TOKEN || process.env.TURSO_AUTH_TOKEN;
 
 console.log('TURSO_DATABASE_URL from env:', tursoUrl ? 'SET (' + tursoUrl.substring(0, 50) + '...)' : 'NOT SET');
 console.log('TURSO_AUTH_TOKEN from env:', tursoAuthToken ? 'SET (length: ' + tursoAuthToken.length + ')' : 'NOT SET');
