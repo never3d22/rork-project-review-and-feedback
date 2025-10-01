@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import backendApp from '../backend/hono';
 
 export const config = {
-  runtime: 'nodejs',
+  runtime: 'edge',
 };
 
 const app = new Hono().basePath('/api');
