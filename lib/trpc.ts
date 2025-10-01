@@ -6,29 +6,28 @@ import superjson from "superjson";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  
   console.log('\n========================================');
   console.log('🔵 [TRPC CLIENT] Getting base URL');
   console.log('========================================');
-  console.log('EXPO_PUBLIC_RORK_API_BASE_URL:', envUrl || 'NOT SET');
   console.log('typeof window:', typeof window);
-  
-  if (envUrl && envUrl.trim()) {
-    console.log('✅ Using EXPO_PUBLIC_RORK_API_BASE_URL:', envUrl);
-    console.log('========================================\n');
-    return envUrl;
-  }
   
   if (typeof window !== 'undefined') {
     const currentUrl = window.location.origin;
-    console.log('✅ Running on web, using current origin:', currentUrl);
+    console.log('✅ Running on web, using same origin:', currentUrl);
+    console.log('This ensures frontend and backend use the same domain');
     console.log('========================================\n');
     return currentUrl;
   }
   
+  const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  if (envUrl && envUrl.trim()) {
+    console.log('✅ Using EXPO_PUBLIC_RORK_API_BASE_URL for mobile:', envUrl);
+    console.log('========================================\n');
+    return envUrl;
+  }
+  
   const fallbackUrl = "http://localhost:8081";
-  console.error("⚠️ EXPO_PUBLIC_RORK_API_BASE_URL is not set and not running in browser, using fallback:", fallbackUrl);
+  console.error("⚠️ EXPO_PUBLIC_RORK_API_BASE_URL is not set, using fallback:", fallbackUrl);
   console.log('========================================\n');
   return fallbackUrl;
 };

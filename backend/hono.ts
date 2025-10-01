@@ -14,21 +14,27 @@ console.log('✅ [HONO] Hono app created');
 
 app.use("*", cors({
   origin: (origin) => {
-    const allowedOrigins = [
-      'https://rork-project-review-and-feedback.vercel.app',
-      'https://rork-project-review-and-feedback-pwy6lkx1a.vercel.app',
-      'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app',
-      'http://localhost:8081',
-      'http://localhost:19006',
-    ];
+    console.log('🔍 [CORS] Request from origin:', origin);
     
-    if (!origin || allowedOrigins.includes(origin) || origin.includes('rork-project-review-and-feedback')) {
-      return origin || '*';
+    if (!origin) {
+      console.log('✅ [CORS] No origin header, allowing request');
+      return '*';
     }
-    return allowedOrigins[0];
+    
+    const isLocalhost = origin.includes('localhost') || origin.includes('127.0.0.1');
+    const isVercel = origin.includes('.vercel.app') || origin.includes('rork-project-review-and-feedback');
+    const isExpoDev = origin.includes('.exp.direct');
+    
+    if (isLocalhost || isVercel || isExpoDev) {
+      console.log('✅ [CORS] Allowed origin:', origin);
+      return origin;
+    }
+    
+    console.log('⚠️ [CORS] Unknown origin, allowing anyway:', origin);
+    return origin;
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  allowHeaders: ['Content-Type', 'Authorization', 'x-trpc-source'],
   exposeHeaders: ['Content-Length'],
   maxAge: 600,
   credentials: true,

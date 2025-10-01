@@ -322,20 +322,19 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
     let savedToDatabase = false;
     
     const getApiBaseUrl = () => {
-      const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-      
-      if (envUrl && envUrl.trim()) {
-        console.log('Using EXPO_PUBLIC_RORK_API_BASE_URL:', envUrl);
-        return envUrl;
-      }
-      
       if (typeof window !== 'undefined') {
         const origin = window.location.origin;
-        console.log('Using window.location.origin:', origin);
+        console.log('Using same origin for API:', origin);
         return origin;
       }
       
-      const fallbackUrl = 'https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app';
+      const envUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+      if (envUrl && envUrl.trim()) {
+        console.log('Using EXPO_PUBLIC_RORK_API_BASE_URL for mobile:', envUrl);
+        return envUrl;
+      }
+      
+      const fallbackUrl = 'http://localhost:8081';
       console.log('Using fallback URL:', fallbackUrl);
       return fallbackUrl;
     };
