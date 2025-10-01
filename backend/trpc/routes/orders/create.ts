@@ -32,18 +32,44 @@ export default publicProcedure
     comments: z.string(),
   }))
   .mutation(async ({ input }) => {
-    const newOrder = {
-      id: Date.now().toString(),
-      ...input,
-      items: JSON.stringify(input.items),
-      status: 'pending',
-    };
-    
-    await db.insert(orders).values(newOrder);
-    
-    return {
-      ...newOrder,
-      items: input.items,
-      createdAt: new Date(),
-    };
+    try {
+      console.log('📝 Creating order in database...');
+      console.log('Order data:', JSON.stringify({
+        userId: input.userId,
+        userName: input.userName,
+        userPhone: input.userPhone,
+        itemsCount: input.items.length,
+        total: input.total,
+      }, null, 2));
+      
+      const newOrder = {
+        id: Date.now().toString(),
+        userId: input.userId || null,
+        userName: input.userName || null,
+        userPhone: input.userPhone || null,
+        items: JSON.stringify(input.items),
+        total: input.total,
+        utensils: input.utensils,
+        utensilsCount: input.utensilsCount,
+        paymentMethod: input.paymentMethod,
+        deliveryType: input.deliveryType,
+        deliveryAddress: input.deliveryAddress || null,
+        deliveryTime: input.deliveryTime || null,
+        comments: input.comments || '',
+        status: 'pending',
+      };
+      
+      console.log('Inserting order into database...');
+      await db.insert(orders).values(newOrder);
+      console.log('✅ Order inserted successfully!');
+      
+      return {
+        ...newOrder,
+        items: input.items,
+        createdAt: new Date(),
+      };
+    } catch (error) {
+      console.error('❌ Error creating order:', error);
+      throw error;
+    }
   });
