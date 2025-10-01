@@ -7,15 +7,19 @@ import { CartItem, Dish, Order, User, Restaurant, Category } from '@/types/resta
 import { MOCK_DISHES, MOCK_CATEGORIES } from '@/constants/dishes';
 import { trpcClient } from '@/lib/trpc';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (error) {
+  console.log('Notifications setup error:', error);
+}
 
 const storage = {
   async getItem(key: string): Promise<string | null> {
