@@ -27,8 +27,8 @@ const getBaseUrl = () => {
     return currentUrl;
   }
   
-  const fallbackUrl = "https://rork-project-review-and-feedback-3ukzrxnx5.vercel.app";
-  console.error("⚠️ EXPO_PUBLIC_RORK_API_BASE_URL is not set, using fallback:", fallbackUrl);
+  const fallbackUrl = "http://localhost:8081";
+  console.error("⚠️ EXPO_PUBLIC_RORK_API_BASE_URL is not set and not running in browser, using fallback:", fallbackUrl);
   console.log('========================================\n');
   return fallbackUrl;
 };
