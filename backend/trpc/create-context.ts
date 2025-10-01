@@ -1,5 +1,4 @@
 import { initTRPC } from "@trpc/server";
-import superjson from "superjson";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 
 export const createContext = (opts: FetchCreateContextFnOptions) => {
@@ -10,9 +9,7 @@ export const createContext = (opts: FetchCreateContextFnOptions) => {
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
 
-const t = initTRPC.context<Context>().create({
-  transformer: superjson,
-});
+const t = initTRPC.context<Context>().create();
 
 const isAdmin = t.middleware(async ({ ctx, next }) => {
   const authHeader = ctx.req.headers.get('authorization');
