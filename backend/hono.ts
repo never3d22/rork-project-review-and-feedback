@@ -54,7 +54,29 @@ console.log('✅ [HONO] tRPC server middleware configured');
 
 app.get("/", (c) => {
   console.log('📍 [HONO] Root endpoint hit');
+  console.log('Request URL:', c.req.url);
+  console.log('Request path:', c.req.path);
+  return c.json({ 
+    status: "ok", 
+    message: "API is running",
+    path: c.req.path,
+    url: c.req.url
+  });
+});
+
+app.get("/api", (c) => {
+  console.log('📍 [HONO] /api endpoint hit');
   return c.json({ status: "ok", message: "API is running" });
+});
+
+app.notFound((c) => {
+  console.log('❌ [HONO] 404 Not Found:', c.req.path);
+  return c.json({ error: "Not Found", path: c.req.path }, 404);
+});
+
+app.onError((err, c) => {
+  console.error('❌ [HONO] Error:', err);
+  return c.json({ error: err.message }, 500);
 });
 
 console.log('✅ [HONO] Server initialization complete');
