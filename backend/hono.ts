@@ -1,58 +1,33 @@
-import { Hono } from "hono";
-import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "@trpc/server";
-import { inferProcedureOutput } from "@trpc/server";
-import { json } from "hono/json";
-import { createClient } from "libsql"; // Turso client
-
-// Создаем Turso client
-const db = createClient({
-  url: "libsql://restaurant-app-never3d22.aws-eu-west-1.turso.io",
-  authToken: process.env.TURSO_TOKEN,
-});
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { createClient } from '@libsql/client';
 
 const app = new Hono();
 
-// tRPC router
-const trpcRouter = createTRPCRouter({
-  createOrder: publicProcedure
-    .input(z.object({
-      name: z.string(),
-      phone: z.string(),
-      items: z.array(z.object({ id: z.number(), quantity: z.number() })),
-    }))
-    .mutation(async ({ input }) => {
-      try {
-        // Сохраняем заказ в Turso
-        const itemsJSON = JSON.stringify(input.items);
-        await db.execute(
-          "INSERT INTO orders (name, phone, items) VALUES (?, ?, ?)",
-          [input.name, input.phone, itemsJSON]
-        );
+app.use('*', cors());
 
-        return { success: true };
-      } catch (err) {
-        console.error("Ошибка сохранения заказа:", err);
-        throw new Error("Failed to save order");
-      }
-    }),
+const client = createClient({
+  url: 'libsql://restaurant-app-never3d22.aws-eu-west-1.turso.io',
+  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTkyOTg2NjAsImlkIjoiNmFhZWM3NjQtYWI0MS00NTdlLTg3MjEtODY5ZjIyMDE5OTc5IiwicmlkIjoiMzc3MWNjMDAtNGNmMy00Y2FlLTk4ZjQtN2E1OWYxNTU4MGQ2In0.b2OyNKShbcaa7ae8LnhjHX0jSH0GFxk_J55isBqrQqG5rfAXrPBjOxmdAS5YKNzX511MA-OZdEqMzp-mC6f9Ag'
 });
 
-// Обертка tRPC в Hono
-app.post("/trpc/:procedure", async (c) => {
-  const procedureName = c.req.param("procedure");
+app.get('/', (c) => c.text('API is working!'));
 
-  if (!trpcRouter._def.procedures[procedureName]) {
-    return c.json({ error: "Procedure not found" }, 404);
-  }
-
+app.post('/order', async (c) => {
   try {
     const body = await c.req.json();
-    const result = await trpcRouter._def.procedures[procedureName].resolve({ input: body });
-    return c.json(result);
-  } catch (err: any) {
-    console.error("TRPC error:", err);
-    return c.json({ error: err.message || "Internal Server Error" }, 500);
+    console.log('Received order:', body);
+
+    // Сохраняем заказ в Turso
+    const { items, total } = body;
+    const result = await client.execute(`
+      INSERT INTO orders (items, total) VALUES (?, ?)
+    `, [JSON.stringify(items), total]);
+
+    return c.json({ success: true, orderId: result.insertId });
+  } catch (err) {
+    console.error('Error saving order:', err);
+    return c.json({ success: false, error: err.message });
   }
 });
 
