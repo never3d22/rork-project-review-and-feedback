@@ -1665,7 +1665,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   loginButtonText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold' as const,
     color: '#fff',
   },
@@ -1682,7 +1682,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 215, 0, 0.05)',
   },
   adminButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600' as const,
     color: '#FFD700',
   },
