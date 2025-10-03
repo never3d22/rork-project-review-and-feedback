@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Эмулятор входа администратора</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", Roboto, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f7f7f7, #e8f0ff);
+        color: #1f2933;
+      }
+
+      .container {
+        margin-top: 5vh;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+        width: min(560px, 92vw);
+        padding: 32px 36px;
+      }
+
+      h1,
+      h2 {
+        margin-top: 0;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 24px;
+      }
+
+      h2 {
+        font-size: 22px;
+        margin-bottom: 16px;
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #4b5563;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        padding: 12px 14px;
+        border: 1px solid #cbd5f5;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input[type="text"]:focus,
+      input[type="password"]:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      }
+
+      button[type="submit"] {
+        background: #2563eb;
+        border: none;
+        border-radius: 10px;
+        color: #ffffff;
+        padding: 14px 18px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease;
+      }
+
+      button[type="submit"]:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+
+      button[type="submit"]:active {
+        transform: translateY(0px) scale(0.99);
+      }
+
+      .status {
+        min-height: 22px;
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .status.success {
+        color: #047857;
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(203, 213, 225, 0.7);
+      }
+
+      th,
+      td {
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 15px;
+      }
+
+      thead {
+        background: rgba(59, 130, 246, 0.1);
+      }
+
+      tbody tr:nth-child(even) {
+        background: rgba(148, 163, 184, 0.1);
+      }
+
+      tbody tr:hover {
+        background: rgba(59, 130, 246, 0.15);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .token {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 14px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.08);
+        word-break: break-all;
+      }
+
+      footer {
+        margin-top: 28px;
+        font-size: 13px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Эмулятор входа администратора</h1>
+      <p>
+        Введите данные администратора (<code>admin</code> / <code>1234</code>), чтобы получить
+        токен и запросить список пользователей.
+      </p>
+      <form id="loginForm">
+        <label>
+          Логин администратора
+          <input type="text" id="username" autocomplete="username" required />
+        </label>
+        <label>
+          Пароль администратора
+          <input
+            type="password"
+            id="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <button type="submit">Войти</button>
+      </form>
+      <div id="status" class="status" role="status"></div>
+      <section id="tokenSection" class="hidden">
+        <h2>Полученный токен</h2>
+        <div id="tokenValue" class="token"></div>
+      </section>
+      <section id="usersSection" class="hidden">
+        <h2>Список пользователей</h2>
+        <table aria-live="polite">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Имя</th>
+              <th>E-mail</th>
+              <th>Роль</th>
+              <th>Создан</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </section>
+      <footer>
+        Данные являются тестовыми и предназначены только для локальной проверки интеграции.
+      </footer>
+    </main>
+    <script>
+      (function () {
+        const form = document.getElementById('loginForm');
+        const statusEl = document.getElementById('status');
+        const tokenSection = document.getElementById('tokenSection');
+        const tokenValue = document.getElementById('tokenValue');
+        const usersSection = document.getElementById('usersSection');
+        const usersBody = document.getElementById('usersBody');
+
+        let authToken = null;
+        let loading = false;
+
+        function setStatus(message, type) {
+          statusEl.textContent = message;
+          statusEl.className = 'status';
+          if (type) {
+            statusEl.classList.add(type);
+          }
+        }
+
+        function renderUsers(items) {
+          usersBody.innerHTML = '';
+          if (!Array.isArray(items) || items.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 5;
+            cell.textContent = 'Пользователи не найдены';
+            row.appendChild(cell);
+            usersBody.appendChild(row);
+            return;
+          }
+
+          for (const user of items) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user.id ?? '—'}</td>
+              <td>${user.name ?? '—'}</td>
+              <td>${user.email ?? '—'}</td>
+              <td>${user.role ?? '—'}</td>
+              <td>${user.createdAt ?? '—'}</td>
+            `;
+            usersBody.appendChild(row);
+          }
+        }
+
+        async function login(username, password) {
+          const response = await fetch('/api/trpc/auth.loginAdmin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              0: {
+                json: { username, password },
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Ошибка авторизации: ${response.status}`);
+          }
+
+          return response.json();
+        }
+
+        async function loadUsers() {
+          if (!authToken) {
+            throw new Error('Токен авторизации не найден');
+          }
+
+          const response = await fetch('/api/trpc/users.list', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({
+              0: {
+                json: {},
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Ошибка загрузки пользователей: ${response.status}`);
+          }
+
+          return response.json();
+        }
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (loading) {
+            return;
+          }
+
+          const username = document.getElementById('username').value.trim();
+          const password = document.getElementById('password').value.trim();
+
+          if (!username || !password) {
+            setStatus('Введите логин и пароль администратора', 'error');
+            return;
+          }
+
+          setStatus('Выполняется вход…');
+          loading = true;
+
+          try {
+            const loginPayload = await login(username, password);
+            const data = loginPayload?.[0]?.result?.data;
+
+            if (!data?.success) {
+              const reason = data?.error || 'Неверный логин или пароль';
+              setStatus(reason, 'error');
+              tokenSection.classList.add('hidden');
+              usersSection.classList.add('hidden');
+              loading = false;
+              return;
+            }
+
+            authToken = data.token;
+            tokenValue.textContent = authToken;
+            tokenSection.classList.remove('hidden');
+            setStatus('Авторизация прошла успешно', 'success');
+
+            const usersPayload = await loadUsers();
+            const usersData = usersPayload?.[0]?.result?.data?.users ?? [];
+            renderUsers(usersData);
+            usersSection.classList.remove('hidden');
+          } catch (error) {
+            console.error(error);
+            setStatus(error.message || 'Не удалось выполнить запрос', 'error');
+            tokenSection.classList.add('hidden');
+            usersSection.classList.add('hidden');
+          } finally {
+            loading = false;
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
